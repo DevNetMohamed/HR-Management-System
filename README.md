@@ -21,78 +21,170 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# HR Management System
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A multi-tenant, fully configurable **Human Resources Management System (HRMS)** built with **NestJS** and **PostgreSQL**.
 
-## Project setup
+## Introduction
+
+Most HR tools force every company into the same fixed rules. This project takes the opposite approach: one platform that any company can adopt, where **policies are configuration, not code**. Working hours, grace periods, leave types, approval chains, payroll rules and notification rules are all defined per company (tenant) by an administrator, without touching the codebase.
+
+The system covers the complete employee lifecycle, from the job requisition that leads to a hire, through onboarding, day-to-day attendance, leave, payroll and performance, to offboarding and final settlement. Every sensitive action is recorded in an immutable audit log, and every company's data is fully isolated from the others.
+
+The project was started as part of an internship at eYouth and is planned from a backlog of **18 epics / 180 user stories**.
+
+## Key Principles
+
+- **Multi-tenancy:** every request runs inside a tenant context, and every query is tenant-scoped.
+- **Configurable business rules:** policies live in the database and are editable by company admins.
+- **Approval engine:** one generic, configurable approval workflow reused by leave, payroll, recruitment, offboarding and more.
+- **Auditability:** append-only audit trail with before/after values for sensitive changes.
+- **Clean Architecture:** each module is split into `domain`, `application`, `infrastructure` and `presentation` layers, with dependencies pointing inward only.
+
+## Modules
+
+| Area | Modules |
+|---|---|
+| Platform | Company Settings, Access Control, Approval Engine, Audit Log, Notifications |
+| Organization & People | Organization, Employee Model |
+| Time & Absence | Attendance Management, Leave Management |
+| Money | Payroll, Employee Benefits |
+| Talent | Recruitment, Onboarding, Performance, Learning & Development, Offboarding |
+| Operations | Asset Management, Reports |
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | [NestJS](https://nestjs.com/) (TypeScript) |
+| Database | PostgreSQL |
+| Package manager | pnpm |
+| Testing | Jest |
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) 20 or later
+- [pnpm](https://pnpm.io/installation)
+- [PostgreSQL](https://www.postgresql.org/download/) 14 or later (local install or Docker)
+
+## Getting Started
+
+### 1. Clone the repository
 
 ```bash
-$ pnpm install
+git clone https://github.com/DevNetMohamed/HR-Management-System.git
+cd HR-Management-System
 ```
 
-## Compile and run the project
+### 2. Install dependencies
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
 ```
 
-## Run tests
+If pnpm reports ignored build scripts, run `pnpm approve-builds` and allow the listed packages.
+
+### 3. Configure the environment
+
+Create a `.env` file in the project root:
+
+```env
+PORT=3000
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_NAME=hrms
+
+JWT_SECRET=change-me
+```
+
+> Adjust these variable names to match your configuration module.
+
+### 4. Create the database
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+createdb hrms
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Or with Docker:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+docker run --name hrms-postgres -e POSTGRES_PASSWORD=your_password -e POSTGRES_DB=hrms -p 5432:5432 -d postgres:16
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 5. Run the application
 
-## Resources
+```bash
+# development (watch mode)
+pnpm start:dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# production build
+pnpm build
+pnpm start:prod
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+The API runs at `http://localhost:3000`.
 
-## Support
+## Scripts
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+| Command | Description |
+|---|---|
+| `pnpm start:dev` | Start in watch mode |
+| `pnpm start` | Start once |
+| `pnpm build` | Compile to `dist/` |
+| `pnpm start:prod` | Run the compiled build |
+| `pnpm lint` | Lint and fix |
+| `pnpm test` | Unit tests |
+| `pnpm test:e2e` | End-to-end tests |
+| `pnpm test:cov` | Test coverage |
 
-## Stay in touch
+## Project Structure
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+src/
+  shared/                  shared kernel: base classes, ports, common utilities
+  modules/
+    <module-name>/
+      domain/              entities, value objects, domain services, events, repository interfaces
+      application/         use cases, DTOs, ports
+      infrastructure/      persistence (repositories, mappers), adapters
+      presentation/        controllers, validators
+```
+
+Modules communicate through ports (interfaces), never by importing each other's internals.
+
+## Roadmap
+
+Development follows the backlog dependency order:
+
+| Phase | Scope |
+|---|---|
+| 1 | Platform core: tenancy, audit log, notifications, company settings, roles |
+| 2 | Security and governance: approval definitions, field-level access |
+| 3 | Organization and employee backbone |
+| 4 | Attendance and leave |
+| 5 | Asset management |
+| 6 | Payroll |
+| 7 | Employee benefits |
+| 8 | Performance and learning |
+| 9 | Recruitment |
+| 10 | Onboarding |
+| 11 | Offboarding and access lifecycle |
+| 12 | Reports and hardening |
+
+## Contributing
+
+1. Create a branch: `git checkout -b feature/your-feature`
+2. Commit your changes: `git commit -m "feat: add your feature"`
+3. Push the branch: `git push origin feature/your-feature`
+4. Open a Pull Request
+
+## Author
+
+**Mohamed Adel** ([@DevNetMohamed](https://github.com/DevNetMohamed))
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Add a license for the project (for example MIT) and reference it here.
