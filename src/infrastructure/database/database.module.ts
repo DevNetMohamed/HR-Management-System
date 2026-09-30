@@ -1,5 +1,6 @@
 import { Global, Module } from "@nestjs/common";
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 
 @Global()
 @Module({
@@ -15,10 +16,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
         autoLoadEntities: true,
         synchronize: false,
-
+         namingStrategy: new SnakeNamingStrategy(),
         logging: true,
       }),
     }),
   ],
+  exports: [TypeOrmModule],
 })
 export class DatabaseModule {}
