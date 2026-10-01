@@ -6,10 +6,11 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { EmployeeStatus, EmploymentType } from '../../domain/enums';
+import { EmployeeStatus, EmploymentType } from '../../../domain/Employees/Enums/Employee-enums';
+import { AuditedOrmEntity } from '../../audited.orm-entity';
 
 @Entity('employees')
-export class EmployeeOrmEntity {
+export class EmployeeOrmEntity extends AuditedOrmEntity {
   @PrimaryColumn('uuid') id: string;
   @Column('uuid') companyId: string;
   @Column() employeeNumber: string;
@@ -34,13 +35,4 @@ export class EmployeeOrmEntity {
   status: EmployeeStatus;
   @Column({ type: 'varchar', nullable: true }) profilePhotoUrl: string | null;
 
-  @CreateDateColumn({ type: 'timestamptz' }) createdAt: Date;
-  @UpdateDateColumn({ type: 'timestamptz' }) updatedAt: Date;
-  @Column({ type: 'uuid', nullable: true }) createdBy: string | null;
-  @Column({ type: 'uuid', nullable: true }) updatedBy: string | null;
-  @DeleteDateColumn({ type: 'timestamptz' }) deletedAt: Date | null;
-  @Column({ type: 'jsonb', nullable: true }) metadata: Record<
-    string,
-    unknown
-  > | null;
 }

@@ -1,4 +1,4 @@
-import { Employee } from './employee.entity';
+import { Employee } from '../Entity/employee.entity';
 
 export interface EmployeeRepository {
   findById(companyId: string, id: string): Promise<Employee | null>;

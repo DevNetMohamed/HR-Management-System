@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Employee, HireInput } from '../../domain/employee.entity';
-import { EMPLOYEE_REPOSITORY, type EmployeeRepository } from '../../domain/employee.repository';
-import { EVENT_PUBLISHER, type DomainEventPublisher } from '../ports/event-publisher.port';
-import { ReferenceValidator } from '../services/reference-validator';
-import { ConflictError } from '../errors';
+import { Employee, HireInput } from '../../../domain/Employees/Entity/employee.entity';
+import { EMPLOYEE_REPOSITORY, type EmployeeRepository } from '../../../domain/Employees/interfaces/employee.repository';
+import { EVENT_PUBLISHER, type DomainEventPublisher } from '../../ports/event-publisher.port';
+import { ReferenceValidator } from '../../services/reference-validator';
+import { ConflictError } from '../../errors';
 
 export type HireEmployeeCommand = Omit<HireInput, 'employeeNumber'>;
 

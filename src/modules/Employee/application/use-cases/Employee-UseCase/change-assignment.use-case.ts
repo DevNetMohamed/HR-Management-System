@@ -1,9 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {  EMPLOYEE_REPOSITORY, type EmployeeRepository } from "../../domain/employee.repository";
-import { EVENT_PUBLISHER, type DomainEventPublisher } from "../ports/event-publisher.port";
-import { ReferenceValidator } from "../services/reference-validator";
-import { AssignmentChange } from "../../domain/employee.entity";
-import { NotFoundError } from "../errors";
+import { EMPLOYEE_REPOSITORY, type EmployeeRepository } from "src/modules/Employee/domain/Employees/interfaces/employee.repository";
+import { type DomainEventPublisher, EVENT_PUBLISHER } from "../../ports/event-publisher.port";
+import { AssignmentChange } from "src/modules/Employee/domain/Employees/Entity/employee.entity";
+import { NotFoundError } from "../../errors";
+import { ReferenceValidator } from "../../services/reference-validator";
+
 
 @Injectable()
 export class ChangeAssignmentUseCase {

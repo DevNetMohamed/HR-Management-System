@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { EmployeeQueries, ListEmployeesFilter } from "../../application/queries/employee.queries";
+import { EmployeeQueries, ListEmployeesFilter } from "../../../application/queries/employee.queries";
 import { DataSource } from "typeorm";
 
 @Injectable()

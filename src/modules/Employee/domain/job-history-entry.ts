@@ -1,4 +1,4 @@
-import { JobChangeType } from "./enums";
+import { JobChangeType } from "./Employees/Enums/Employee-enums";
 
 export interface JobHistoryEntry {
     id: string;

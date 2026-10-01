@@ -9,21 +9,22 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CurrentCompany } from './current-company.decorator';
+import { CurrentCompany } from '../../current-company.decorator';
+
+import { NotFoundError } from '../../../application/errors';
+import {
+  EMPLOYEE_QUERIES,
+  type EmployeeQueries,
+} from '../../../application/queries/employee.queries';
+import { TerminateEmployeeUseCase } from '../../../application/use-cases/Employee-UseCase/terminate-employee.use-case';
+import { HireEmployeeUseCase } from '../../../application/use-cases/Employee-UseCase/hire-employee.use-case';
+import { ChangeAssignmentUseCase } from 'src/modules/Employee/application/use-cases/Employee-UseCase/change-assignment.use-case';
 import {
   ChangeAssignmentRequest,
   HireEmployeeRequest,
   ListEmployeesQuery,
   TerminateEmployeeRequest,
-} from './dto/employee.requests';
-import { NotFoundError } from '../application/errors';
-import {
-  EMPLOYEE_QUERIES,
-  type EmployeeQueries,
-} from '../application/queries/employee.queries';
-import { TerminateEmployeeUseCase } from '../application/use-cases/terminate-employee.use-case';
-import { ChangeAssignmentUseCase } from '../application/use-cases/change-assignment.use-case';
-import { HireEmployeeUseCase } from '../application/use-cases/hire-employee.use-case';
+} from '../../dto/Employee/employee.requests';
 
 @Controller('employees')
 export class EmployeeController {

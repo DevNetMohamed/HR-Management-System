@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EmployeeOrmEntity } from "./employee.orm-entity";
-import { EmployeeRepository } from "../../domain/employee.repository";
+import { EmployeeRepository } from "../../../domain/Employees/interfaces/employee.repository";
 import { EmployeeMapper } from "./employee.mapper";
-import { Employee } from "../../domain/employee.entity";
-import { JobHistoryOrmEntity } from "./job-history.orm-entity";
+import { Employee } from "../../../domain/Employees/Entity/employee.entity";
+import { JobHistoryOrmEntity } from "../job-history.orm-entity/job-history.orm-entity";
 import { Repository } from "typeorm";
 import { DataSource } from "typeorm";
 

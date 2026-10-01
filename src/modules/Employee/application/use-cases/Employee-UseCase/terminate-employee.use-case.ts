@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { EMPLOYEE_REPOSITORY, type EmployeeRepository } from "../../domain/employee.repository";
-import { EVENT_PUBLISHER, type DomainEventPublisher } from "../ports/event-publisher.port";
-import { NotFoundError } from "../errors";
+import { EMPLOYEE_REPOSITORY, type EmployeeRepository } from "../../../domain/Employees/interfaces/employee.repository";
+import { EVENT_PUBLISHER, type DomainEventPublisher } from "../../ports/event-publisher.port";
+import { NotFoundError } from "../../errors";
 
 @Injectable()
 export class TerminateEmployeeUseCase {
@@ -14,7 +14,7 @@ export class TerminateEmployeeUseCase {
     const employee = await this.employees.findById(cmd.companyId, cmd.employeeId);
     if (!employee) throw new NotFoundError('Employee not found');
 
-    employee.terminate(cmd.lastWorkingDay);   // لازم يكون OFFBOARDING أو ONBOARDING
+    employee.terminate(cmd.lastWorkingDay);   
 
     await this.employees.save(employee);
     await this.publisher.publish(employee.pullEvents());

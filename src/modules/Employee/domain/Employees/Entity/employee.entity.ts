@@ -3,16 +3,16 @@ import { randomUUID } from 'crypto';
 import {
   DomainError,
   InvalidStatusTransitionError,
-} from './errors/domain.errors';
-import { Email } from './value-objects/email.vo';
-import { EmployeeStatus as S, EmploymentType, JobChangeType } from './enums';
+} from '../../errors/domain.errors';
+import { Email } from '../../value-objects/email.vo';
+import { EmployeeStatus as S, EmploymentType, JobChangeType } from '../Enums/Employee-enums';
 import {
   DomainEvent,
   EmployeeAssignmentChanged,
   EmployeeHired,
   EmployeeTerminated,
-} from './events/employee.events';
-import { JobHistoryEntry } from './job-history-entry';
+} from '../Events/employee.events';
+import { JobHistoryEntry } from '../../job-history-entry';
 
 export type IsoDate = string; // 'YYYY-MM-DD'
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
