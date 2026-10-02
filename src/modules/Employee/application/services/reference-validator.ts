@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
     EMPLOYEE_REPOSITORY,
     type EmployeeRepository,
-} from '../../domain/Employees/interfaces/employee.repository';
-import { EmployeeStatus } from '../../domain/Employees/Enums/Employee-enums';
+} from '../../domain/Employees/repositories/employee.repository';
+import { EmployeeStatus } from '../../domain/Employees/enums/Employee-enums';
 import {
     ORGANIZATION_GATEWAY,
     type OrganizationGateway,
