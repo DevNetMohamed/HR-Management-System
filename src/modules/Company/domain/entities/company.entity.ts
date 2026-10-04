@@ -1,5 +1,9 @@
 import { randomUUID } from 'crypto';
 import { CompanyStatus } from '../enums/company-enums';
+import {
+  DomainError,
+  InvalidCompanyStatusTransitionError,
+} from '../errors/company.errors';
 
 export interface CompanyProps {
   id: string;
@@ -19,15 +23,24 @@ export interface CompanyProps {
 export type CreateCompanyInput = Pick<CompanyProps, 'name' | 'subdomain'> &
   Partial<Omit<CompanyProps, 'id' | 'status'>>;
 
+const TRANSITIONS: Record<CompanyStatus, CompanyStatus[]> = {
+  [CompanyStatus.TRIAL]: [CompanyStatus.ACTIVE, CompanyStatus.SUSPENDED],
+  [CompanyStatus.ACTIVE]: [CompanyStatus.SUSPENDED],
+  [CompanyStatus.SUSPENDED]: [CompanyStatus.ACTIVE],
+};
+
 export class Company {
   private constructor(private props: CompanyProps) {}
 
   static create(i: CreateCompanyInput): Company {
     if (!i.name?.trim()) {
-      throw new Error('Company name is required');
+      throw new DomainError('Company name is required', 'COMPANY_NAME_REQUIRED');
     }
     if (!/^[a-z0-9-]+$/.test(i.subdomain)) {
-      throw new Error('Subdomain must be lowercase letters, numbers, or dashes');
+      throw new DomainError(
+        'Subdomain must be lowercase letters, numbers, or dashes',
+        'COMPANY_INVALID_SUBDOMAIN',
+      );
     }
 
     return new Company({
@@ -50,6 +63,14 @@ export class Company {
     return new Company(props);
   }
 
+  activate() {
+    this.moveTo(CompanyStatus.ACTIVE);
+  }
+
+  suspend() {
+    this.moveTo(CompanyStatus.SUSPENDED);
+  }
+
   get id() {
     return this.props.id;
   }
@@ -58,5 +79,12 @@ export class Company {
   }
   toSnapshot(): CompanyProps {
     return { ...this.props };
+  }
+
+  private moveTo(next: CompanyStatus) {
+    if (!TRANSITIONS[this.props.status].includes(next)) {
+      throw new InvalidCompanyStatusTransitionError(this.props.status, next);
+    }
+    this.props.status = next;
   }
 }
