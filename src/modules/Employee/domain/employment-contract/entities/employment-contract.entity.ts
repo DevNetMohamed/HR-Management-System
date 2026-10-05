@@ -1,7 +1,7 @@
 import { ContractType } from '../enums/employment-contract.enums';
-import { DomainError } from '../../errors/domain.errors';
 import { assertIsoDate } from '../../value-objects/iso-date';
 import { ContractTerms } from '../interfaces/employee-contract-interface';
+import { DomainError } from 'src/common/domain-error/DomainError.base';
 
 export const fail = (message: string, code: string) => new DomainError(message, code);
 export const inRange = (v: number, min: number, max: number) =>

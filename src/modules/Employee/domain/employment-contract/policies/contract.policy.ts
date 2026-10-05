@@ -1,4 +1,4 @@
-import { DomainError } from '../../errors/domain.errors';
+import { DomainError } from 'src/common/domain-error/DomainError.base';
 import { EmploymentContract } from '../entities/EmploymentContract';
 import { Period } from '../interfaces/employee-contract-interface';
 

@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { NotFoundError } from 'rxjs';
 import { ApplicationError, ConflictError } from '../../application/errors';
-import { DomainError } from '../../domain/errors/domain.errors';
+import { DomainError } from 'src/common/domain-error/DomainError.base';
 
 @Catch(DomainError, ApplicationError)
 export class ErrorFilter implements ExceptionFilter {

@@ -1,4 +1,4 @@
-import { DomainError } from "../errors/domain.errors";
+import { DomainError } from "src/common/domain-error/DomainError.base";
 
 export type IsoDate = string;
 export function assertIsoDate(value: string, field: string): void{

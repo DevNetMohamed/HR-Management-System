@@ -1,14 +1,15 @@
 import { randomUUID } from 'crypto';
 import {
-  DomainError,
   InvalidStatusTransitionError,
 } from '../../errors/domain.errors';
 import { Email } from '../../value-objects/email.vo';
 import { EmployeeStatus as S, EmploymentType, JobChangeType } from '../enums/Employee-enums';
 import { JobHistoryEntry } from '../../job-history/job-history-entry';
-import { DomainEvent, EmployeeTerminated } from '../events/employee-terminated.events';
+import {  EmployeeTerminated } from '../events/employee-terminated.events';
 import { EmployeeHired } from '../events/employee-hired.event';
 import { EmployeeAssignmentChanged } from '../events/employee-assignment-changed.event';
+import { DomainError } from 'src/common/domain-error/DomainError.base';
+import { DomainEvent } from 'src/common/domain-event/DomainEvent.base';
 
 export type IsoDate = string; // 'YYYY-MM-DD'
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;

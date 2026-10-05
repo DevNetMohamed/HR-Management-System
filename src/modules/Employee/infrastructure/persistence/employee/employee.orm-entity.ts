@@ -1,4 +1,14 @@
-import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
+import {
+  Check,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  PrimaryColumn,
+  Unique,
+} from 'typeorm';
 import {
   EmployeeStatus,
   EmploymentType,
@@ -6,12 +16,18 @@ import {
 import { AuditedOrmEntity } from '../../audited.orm-entity';
 
 @Entity('employees')
-@Index('uq_employee_company_employee_number',
-  ['companyId', 'employeeNumber'],
-  {unique: true}
+@Unique('employees_company_id_id_uq', ['companyId', 'id'])
+@Index('employees_company_number_uq', ['companyId', 'employeeNumber'], {
+  unique: true,
+  where: '"deleted_at" IS NULL',
+})
+@Check(
+  'employees_dates_chk',
+  '"termination_date" IS NULL OR "termination_date" >= "hire_date"',
 )
-@Index('idx_employees_company_id',
-  ['companyId']
+@Check(
+  'employees_not_self_manager_chk',
+  '"manager_id" IS NULL OR "manager_id" <> "id"',
 )
 export class EmployeeOrmEntity extends AuditedOrmEntity {
   @PrimaryColumn('uuid') id: string;
@@ -37,4 +53,11 @@ export class EmployeeOrmEntity extends AuditedOrmEntity {
   @Column({ type: 'enum', enum: EmployeeStatus, enumName: 'employee_status' })
   status: EmployeeStatus;
   @Column({ type: 'varchar', nullable: true }) profilePhotoUrl: string | null;
+
+  @ManyToOne(() => EmployeeOrmEntity, { nullable: true, onDelete: 'RESTRICT' })
+  @JoinColumn([
+    { name: 'company_id', referencedColumnName: 'companyId' },
+    { name: 'manager_id', referencedColumnName: 'id' },
+  ])
+  manager?: EmployeeOrmEntity | null;
 }

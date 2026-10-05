@@ -1,4 +1,5 @@
-import { DomainEvent } from '../../domain/Employees/events/employee-terminated.events';
+import { DomainEvent } from "src/common/domain-event/DomainEvent.base";
+
 export interface DomainEventPublisher {
   publish(events: DomainEvent[]): Promise<void>;
 }

@@ -29,6 +29,20 @@ import { CONTRACT_QUERIES } from './application/queries/contract.queries';
 import { EmploymentContractController } from './presentation/controllers/employment-contract/employment-contract.controller';
 import { ContractReportsController } from './presentation/controllers/employment-contract/contract-reports.controller';
 import { ChangeAssignmentUseCase } from './application/use-cases/employee/change-assignment.use-case';
+import { EmergencyContactOrmEntity } from './infrastructure/persistence/emergency-contact/emergency-contacts.orm-entity';
+import { EmergencyContactController } from './presentation/controllers/emergency-contact/emergency-contact.controller';
+import { EmergencyContactUseCases } from './application/use-cases/emergency-contact/emergency-contact.use-cases';
+import { EMERGENCY_CONTACT_REPOSITORY } from './domain/emergency-contact/repositories/emergency-contact.repository';
+import { TypeOrmEmergencyContactRepository } from './infrastructure/persistence/emergency-contact/typeorm-emergency-contact.repository';
+import { TypeOrmEmergencyContactQueries } from './infrastructure/persistence/emergency-contact/typeorm-emergency-contact.queries';
+import { EMERGENCY_CONTACT_QUERIES } from './application/queries/emergency-contact.queries';
+import { EmployeeDependentOrmEntity } from './infrastructure/persistence/employee-dependent/employee-dependent.orm-entity';
+import { EmployeeDependentController } from './presentation/controllers/employee-dependent/employee-dependent.controller';
+import { EmployeeDependentUseCases } from './application/use-cases/employee-dependent/employee-dependent.use-cases';
+import { EMPLOYEE_DEPENDENT_REPOSITORY } from './domain/employee-dependents/repositories/employee-dependent.repository';
+import { EMPLOYEE_DEPENDENT_QUERIES } from './application/queries/employee-dependent.queries';
+import { TypeOrmEmployeeDependentRepository } from './infrastructure/persistence/employee-dependent/typeorm-employee-dependent.repository';
+import { TypeOrmEmployeeDependentQueries } from './infrastructure/persistence/employee-dependent/typeorm-employee-dependent.queries';
 
 @Module({
   imports: [
@@ -37,12 +51,16 @@ import { ChangeAssignmentUseCase } from './application/use-cases/employee/change
       EmployeeOrmEntity,
       JobHistoryOrmEntity,
       EmploymentContractOrmEntity,
+      EmergencyContactOrmEntity,
+      EmployeeDependentOrmEntity,
     ]),
   ],
   controllers: [
     EmployeeController,
     EmploymentContractController,
     ContractReportsController,
+    EmergencyContactController,
+    EmployeeDependentController,
   ],
   providers: [
     HireEmployeeUseCase,
@@ -53,6 +71,8 @@ import { ChangeAssignmentUseCase } from './application/use-cases/employee/change
     ExpireDueContractsUseCase,
     EmployeeGuard,
     ContractExpiryJob,
+    EmergencyContactUseCases,
+    EmployeeDependentUseCases,
     { provide: EMPLOYEE_REPOSITORY, useClass: TypeOrmEmployeeRepository },
     { provide: EMPLOYEE_QUERIES, useClass: TypeOrmEmployeeQueries },
     { provide: ORGANIZATION_GATEWAY, useClass: SqlOrganizationGateway },
@@ -63,6 +83,22 @@ import { ChangeAssignmentUseCase } from './application/use-cases/employee/change
       useClass: TypeOrmEmploymentContractRepository,
     },
     { provide: CONTRACT_QUERIES, useClass: TypeOrmContractQueries },
+    {
+      provide: EMERGENCY_CONTACT_REPOSITORY,
+      useClass: TypeOrmEmergencyContactRepository,
+    },
+    {
+      provide: EMERGENCY_CONTACT_QUERIES,
+      useClass: TypeOrmEmergencyContactQueries,
+    },
+    {
+      provide: EMPLOYEE_DEPENDENT_REPOSITORY,
+      useClass: TypeOrmEmployeeDependentRepository,
+    },
+    {
+      provide: EMPLOYEE_DEPENDENT_QUERIES,
+      useClass: TypeOrmEmployeeDependentQueries,
+    },
   ],
 })
 export class EmployeeModule {}
