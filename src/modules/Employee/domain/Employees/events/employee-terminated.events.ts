@@ -1,7 +1,4 @@
-export abstract class DomainEvent{
-    readonly occurredAt = new Date();
-    abstract readonly name: string;
-}
+import { DomainEvent } from "src/common/domain-event/DomainEvent.base";
 
 
 export class EmployeeTerminated extends DomainEvent {

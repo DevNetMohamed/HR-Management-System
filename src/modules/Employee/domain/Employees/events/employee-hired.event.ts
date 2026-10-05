@@ -1,4 +1,4 @@
-import { DomainEvent } from "./employee-terminated.events";
+import { DomainEvent } from "src/common/domain-event/DomainEvent.base";
 
 export class EmployeeHired extends DomainEvent {
   readonly name = 'employee.hired';

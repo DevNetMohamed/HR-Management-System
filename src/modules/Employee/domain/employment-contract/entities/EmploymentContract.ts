@@ -1,4 +1,4 @@
-import { DomainEvent } from '../../Employees/events/employee-terminated.events';
+import { DomainEvent } from 'src/common/domain-event/DomainEvent.base';
 import { assertIsoDate, IsoDate } from '../../value-objects/iso-date';
 import { ContractStatus } from '../enums/employment-contract.enums';
 import {

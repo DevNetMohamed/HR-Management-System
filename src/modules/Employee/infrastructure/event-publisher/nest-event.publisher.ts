@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { DomainEventPublisher } from "../../application/ports/event-publisher.port";
-import { DomainEvent } from "../../domain/Employees/events/employee-terminated.events";
+import { DomainEvent } from "src/common/domain-event/DomainEvent.base";
 
 @Injectable()
 export class NestEventPublisher implements DomainEventPublisher {

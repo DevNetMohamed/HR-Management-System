@@ -1,4 +1,4 @@
-import { DomainEvent } from '../../Employees/events/employee-terminated.events';
+import { DomainEvent } from "src/common/domain-event/DomainEvent.base";
 
 export class ContractActivated extends DomainEvent
 {
@@ -13,7 +13,7 @@ export class ContractActivated extends DomainEvent
     super();
   }
 }
-export class ContractTerminated extends DomainEvent 
+export class ContractTerminated extends DomainEvent
 {
   readonly name = 'contract.terminated';
   constructor(
