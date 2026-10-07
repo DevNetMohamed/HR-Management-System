@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { EmployeeModule } from './modules/Employee/employee.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SecurityModule } from './infrastructure/security/security.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
 
     DatabaseModule,
-    EmployeeModule
+    EmployeeModule,
+    SecurityModule
   ],
 })
 export class AppModule {}

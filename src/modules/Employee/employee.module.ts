@@ -43,6 +43,14 @@ import { EMPLOYEE_DEPENDENT_REPOSITORY } from './domain/employee-dependents/repo
 import { EMPLOYEE_DEPENDENT_QUERIES } from './application/queries/employee-dependent.queries';
 import { TypeOrmEmployeeDependentRepository } from './infrastructure/persistence/employee-dependent/typeorm-employee-dependent.repository';
 import { TypeOrmEmployeeDependentQueries } from './infrastructure/persistence/employee-dependent/typeorm-employee-dependent.queries';
+import { EmployeeBankAccountOrmEntity } from './infrastructure/persistence/employee-bank-account/employee-bank-account.orm-entity';
+import { EmployeeBankAccountController } from './presentation/controllers/employee-bank-account/employee-bank-account.controller';
+import { EmployeeBankAccountUseCases } from './application/use-cases/employee-bank-account/employee-bank-account.use-cases';
+import { EmployeeBankAccountMapper } from './infrastructure/persistence/employee-bank-account/employee-bank-account.mapper';
+import { EMPLOYEE_BANK_ACCOUNT_REPOSITORY } from './domain/employee-bank-accounts/repositories/employee-bank-account.repository';
+import { EMPLOYEE_BANK_ACCOUNT_QUERIES } from './application/queries/employee-bank-account.queries';
+import { TypeOrmEmployeeBankAccountRepository } from './infrastructure/persistence/employee-bank-account/typeorm-employee-bank-account.repository';
+import { TypeOrmEmployeeBankAccountQueries } from './infrastructure/persistence/employee-bank-account/typeorm-employee-bank-account.queries';
 
 @Module({
   imports: [
@@ -53,6 +61,7 @@ import { TypeOrmEmployeeDependentQueries } from './infrastructure/persistence/em
       EmploymentContractOrmEntity,
       EmergencyContactOrmEntity,
       EmployeeDependentOrmEntity,
+      EmployeeBankAccountOrmEntity,
     ]),
   ],
   controllers: [
@@ -61,6 +70,7 @@ import { TypeOrmEmployeeDependentQueries } from './infrastructure/persistence/em
     ContractReportsController,
     EmergencyContactController,
     EmployeeDependentController,
+    EmployeeBankAccountController,
   ],
   providers: [
     HireEmployeeUseCase,
@@ -73,6 +83,8 @@ import { TypeOrmEmployeeDependentQueries } from './infrastructure/persistence/em
     ContractExpiryJob,
     EmergencyContactUseCases,
     EmployeeDependentUseCases,
+    EmployeeBankAccountUseCases,
+    EmployeeBankAccountMapper,
     { provide: EMPLOYEE_REPOSITORY, useClass: TypeOrmEmployeeRepository },
     { provide: EMPLOYEE_QUERIES, useClass: TypeOrmEmployeeQueries },
     { provide: ORGANIZATION_GATEWAY, useClass: SqlOrganizationGateway },
@@ -98,6 +110,14 @@ import { TypeOrmEmployeeDependentQueries } from './infrastructure/persistence/em
     {
       provide: EMPLOYEE_DEPENDENT_QUERIES,
       useClass: TypeOrmEmployeeDependentQueries,
+    },
+    {
+      provide: EMPLOYEE_BANK_ACCOUNT_REPOSITORY,
+      useClass: TypeOrmEmployeeBankAccountRepository,
+    },
+    {
+      provide: EMPLOYEE_BANK_ACCOUNT_QUERIES,
+      useClass: TypeOrmEmployeeBankAccountQueries,
     },
   ],
 })
