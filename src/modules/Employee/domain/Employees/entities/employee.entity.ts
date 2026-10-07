@@ -3,7 +3,7 @@ import {
   InvalidStatusTransitionError,
 } from '../../errors/domain.errors';
 import { Email } from '../../value-objects/email.vo';
-import { EmployeeStatus as S, EmploymentType, JobChangeType } from '../enums/Employee-enums';
+import { EmployeeStatus as S, EmploymentType, JobChangeType } from '../Enums/Employee-enums';
 import { JobHistoryEntry } from '../../job-history/job-history-entry';
 import {  EmployeeTerminated } from '../events/employee-terminated.events';
 import { EmployeeHired } from '../events/employee-hired.event';

@@ -1,4 +1,4 @@
-import { JobChangeType } from "../Employees/enums/Employee-enums";
+import { JobChangeType } from "../Employees/Enums/Employee-enums";
 
 
 export interface JobHistoryEntry {

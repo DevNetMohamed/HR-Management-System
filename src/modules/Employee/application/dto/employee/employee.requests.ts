@@ -16,7 +16,7 @@ import {
   EmployeeStatus,
   EmploymentType,
   JobChangeType,
-} from 'src/modules/Employee/domain/Employees/enums/Employee-enums';
+} from 'src/modules/Employee/domain/Employees/Enums/Employee-enums';
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export class HireEmployeeRequest {
