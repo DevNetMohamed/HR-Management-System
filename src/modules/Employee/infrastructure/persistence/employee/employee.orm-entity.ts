@@ -12,7 +12,7 @@ import {
 import {
   EmployeeStatus,
   EmploymentType,
-} from '../../../domain/Employees/enums/Employee-enums';
+} from '../../../domain/Employees/Enums/Employee-enums';
 import { AuditedOrmEntity } from '../../audited.orm-entity';
 
 @Entity('employees')

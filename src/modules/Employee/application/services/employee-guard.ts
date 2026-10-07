@@ -4,7 +4,7 @@ import {
   type EmployeeRepository,
 } from '../../domain/Employees/repositories/employee.repository';
 import { NotFoundError, ValidationError } from '../errors';
-import { EmployeeStatus } from '../../domain/Employees/enums/Employee-enums';
+import { EmployeeStatus } from '../../domain/Employees/Enums/Employee-enums';
 
 @Injectable()
 export class EmployeeGuard {

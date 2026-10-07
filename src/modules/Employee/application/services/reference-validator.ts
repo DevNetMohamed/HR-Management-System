@@ -3,7 +3,7 @@ import {
     EMPLOYEE_REPOSITORY,
     type EmployeeRepository,
 } from '../../domain/Employees/repositories/employee.repository';
-import { EmployeeStatus } from '../../domain/Employees/enums/Employee-enums';
+import { EmployeeStatus } from '../../domain/Employees/Enums/Employee-enums';
 import {
     ORGANIZATION_GATEWAY,
     type OrganizationGateway,
