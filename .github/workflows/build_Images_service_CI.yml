@@ -29,13 +29,15 @@ jobs:
   # ───────────── Stage 1 ─────────────
   build:
     name: 1 · Build
-    if: github.ref == 'refs/heads/dev'          # manual runs from other branches are skipped
+    if: github.ref == 'refs/heads/cicd'          # manual runs from other branches are skipped
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
+        with:
+          version: 12.11.2
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
