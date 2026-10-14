@@ -64,7 +64,7 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/hrms_test
-      FIELD_ENCRYPTION_KEY: ${{ env.FIELD_ENCRYPTION_KEY }}
+      FIELD_ENCRYPTION_KEY: "000000000000000000" # ${{ env.FIELD_ENCRYPTION_KEY }}
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
