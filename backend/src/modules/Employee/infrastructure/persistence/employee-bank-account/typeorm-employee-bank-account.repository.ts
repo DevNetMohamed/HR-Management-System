@@ -10,6 +10,22 @@ import { ConflictError } from 'src/modules/Employee/application/errors';
 
 const UNIQUE_VIOLATION = '23505';
 
+function getDriverError(
+  error: unknown,
+): { code?: unknown; constraint?: unknown } | undefined {
+  if (!(error instanceof QueryFailedError)) {
+    return undefined;
+  }
+
+  const driverError: unknown = error.driverError;
+
+  if (typeof driverError !== 'object' || driverError === null) {
+    return undefined;
+  }
+
+  return driverError;
+}
+
 @Injectable()
 export class TypeOrmEmployeeBankAccountRepository implements EmployeeBankAccountRepository {
   constructor(
@@ -20,22 +36,24 @@ export class TypeOrmEmployeeBankAccountRepository implements EmployeeBankAccount
   ) {}
 
   private translate(e: unknown): unknown {
-    if (
-      e instanceof QueryFailedError &&
-      (e as any).driverError?.code === UNIQUE_VIOLATION
-    ) {
-      const constraint = (e as any).driverError?.constraint;
-      if (constraint === 'employee_bank_accounts_employee_iban_uq') {
+    const driverError = getDriverError(e);
+
+    if (driverError?.code === UNIQUE_VIOLATION) {
+      if (
+        driverError.constraint === 'employee_bank_accounts_employee_iban_uq'
+      ) {
         return new ConflictError(
           'This IBAN is already registered for the employee',
         );
       }
-      if (constraint === 'employee_bank_accounts_one_primary_uq') {
+
+      if (driverError.constraint === 'employee_bank_accounts_one_primary_uq') {
         return new ConflictError(
           'The primary account was changed concurrently, please retry',
         );
       }
     }
+
     return e;
   }
 

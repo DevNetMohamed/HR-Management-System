@@ -1,5 +1,5 @@
-import { ContractType } from "../enums/employment-contract.enums";
-import { IsoDate } from "../../value-objects/iso-date";
+import { ContractType } from '../enums/employment-contract.enums';
+import { IsoDate } from '../../value-objects/iso-date';
 
 export interface ContractTerms {
   contractType: ContractType;
@@ -18,4 +18,7 @@ export interface EmploymentContractProps extends ContractTerms {
   terminationReason: string | null;
 }
 
-export interface Period { start: IsoDate; end: IsoDate | null };
+export interface Period {
+  start: IsoDate;
+  end: IsoDate | null;
+}

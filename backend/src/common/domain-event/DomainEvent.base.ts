@@ -1,4 +1,4 @@
-export abstract class DomainEvent{
-    readonly occurredAt = new Date();
-    abstract readonly name: string;
+export abstract class DomainEvent {
+  readonly occurredAt = new Date();
+  abstract readonly name: string;
 }

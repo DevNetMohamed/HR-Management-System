@@ -18,7 +18,7 @@ import { EmployeeOrmEntity } from '../employee/employee.orm-entity';
   unique: true,
   where: '"is_primary" = true AND "deleted_at" IS NULL',
 })
-export class EmployeeBankAccountOrmEntity extends AuditedOrmEntity {  
+export class EmployeeBankAccountOrmEntity extends AuditedOrmEntity {
   @PrimaryColumn('uuid') id: string;
   @Column('uuid') companyId: string;
   @Column('uuid') employeeId: string;

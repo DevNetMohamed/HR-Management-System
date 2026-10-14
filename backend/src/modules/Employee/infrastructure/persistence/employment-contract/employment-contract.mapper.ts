@@ -4,16 +4,7 @@ import { EmploymentContractProps } from 'src/modules/Employee/domain/employment-
 
 export class EmploymentContractMapper {
   static toDomain(o: EmploymentContractOrmEntity): EmploymentContract {
-    const {
-      createdAt,
-      updatedAt,
-      createdBy,
-      updatedBy,
-      deletedAt,
-      metadata,
-      ...props
-    } = o;
-    return EmploymentContract.restore(props);
+    return EmploymentContract.restore(o);
   }
   static toOrm(
     p: Readonly<EmploymentContractProps>,

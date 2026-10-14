@@ -17,5 +17,5 @@ export default new DataSource({
   namingStrategy: new SnakeNamingStrategy(),
 
   synchronize: false,
-  logging: true
+  logging: true,
 });

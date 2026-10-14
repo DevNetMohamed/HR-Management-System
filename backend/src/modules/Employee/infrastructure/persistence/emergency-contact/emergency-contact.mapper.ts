@@ -2,7 +2,6 @@ import {
   EmergencyContact,
   EmergencycontactProps,
 } from 'src/modules/Employee/domain/emergency-contact/entities/emergency-contact.entity';
-import { Relationship } from 'src/modules/Employee/domain/emergency-contact/enums/emergency-contact.enums';
 import { EmergencyContactOrmEntity } from './emergency-contacts.orm-entity';
 
 export class EmergencyContactMapper {
@@ -12,7 +11,7 @@ export class EmergencyContactMapper {
       companyId: orm.companyId,
       employeeId: orm.employeeId,
       name: orm.name,
-      relationship: orm.relationship as Relationship,
+      relationship: orm.relationship,
       phone: orm.phone,
     });
   }

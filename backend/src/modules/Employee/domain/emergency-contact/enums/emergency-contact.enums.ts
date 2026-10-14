@@ -8,6 +8,6 @@ export enum Relationship {
   OTHER = 'other',
 }
 
-
 export const isRelationship = (v: unknown): v is Relationship =>
-  typeof v === 'string' && (Object.values(Relationship) as string[]).includes(v);
+  typeof v === 'string' &&
+  (Object.values(Relationship) as string[]).includes(v);

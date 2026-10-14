@@ -1,6 +1,6 @@
-import { Global, Module } from "@nestjs/common";
+import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SnakeNamingStrategy } from "typeorm-naming-strategies";
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Global()
 @Module({

@@ -77,7 +77,7 @@ export class EmploymentContract {
     const defined = Object.fromEntries(
       Object.entries(patch).filter(([, v]) => v !== undefined),
     );
-    const next = { ...this.terms, ...defined } as ContractTerms;
+    const next = { ...this.terms, ...defined };
     validateTerms(next);
     Object.assign(this.props, next);
   }

@@ -25,7 +25,7 @@ const RELATIONSHIPS = Object.values(Relationship)
   'emergency_contacts_relationship_chk',
   `"relationship" IN (${RELATIONSHIPS})`,
 )
-export class EmergencyContactOrmEntity  extends AuditedOrmEntity {
+export class EmergencyContactOrmEntity extends AuditedOrmEntity {
   @PrimaryColumn('uuid') id: string;
   @Column('uuid') companyId: string;
   @Column('uuid') employeeId: string;

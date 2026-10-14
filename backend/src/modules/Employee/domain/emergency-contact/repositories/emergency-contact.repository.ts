@@ -3,7 +3,7 @@ import { EmergencyContact } from '../entities/emergency-contact.entity';
 export interface EmergencyContactRepository {
   findById(companyId: string, id: string): Promise<EmergencyContact | null>;
   save(contact: EmergencyContact): Promise<void>;
-  remove(companyId: string, id: string): Promise<void>; 
+  remove(companyId: string, id: string): Promise<void>;
   countByEmployee(companyId: string, employeeId: string): Promise<number>;
   existsPhone(
     companyId: string,

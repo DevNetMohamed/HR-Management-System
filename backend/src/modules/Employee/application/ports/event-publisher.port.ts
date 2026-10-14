@@ -1,4 +1,4 @@
-import { DomainEvent } from "src/common/domain-event/DomainEvent.base";
+import { DomainEvent } from 'src/common/domain-event/DomainEvent.base';
 
 export interface DomainEventPublisher {
   publish(events: DomainEvent[]): Promise<void>;

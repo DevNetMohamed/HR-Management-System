@@ -10,6 +10,22 @@ import { DependentRelationship } from 'src/modules/Employee/domain/employee-depe
 
 const UNIQUE_VIOLATION = '23505';
 
+function getDriverError(
+  error: unknown,
+): { code?: unknown; constraint?: unknown } | undefined {
+  if (!(error instanceof QueryFailedError)) {
+    return undefined;
+  }
+
+  const driverError: unknown = error.driverError;
+
+  if (typeof driverError !== 'object' || driverError === null) {
+    return undefined;
+  }
+
+  return driverError;
+}
+
 @Injectable()
 export class TypeOrmEmployeeDependentRepository implements EmployeeDependentRepository {
   constructor(
@@ -26,13 +42,11 @@ export class TypeOrmEmployeeDependentRepository implements EmployeeDependentRepo
     try {
       await this.orm.save(EmployeeDependentMapper.toOrm(d.snapshot));
     } catch (e) {
-      if (
-        e instanceof QueryFailedError &&
-        (e as any).driverError?.code === UNIQUE_VIOLATION
-      ) {
+      const driverError = getDriverError(e);
+
+      if (driverError?.code === UNIQUE_VIOLATION) {
         throw new ConflictError('Employee already has a spouse registered');
       }
-      throw e;
     }
   }
 

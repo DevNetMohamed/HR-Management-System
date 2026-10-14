@@ -1,9 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import {
+  EmployeeListItem,
   EmployeeQueries,
   ListEmployeesFilter,
 } from '../../../application/queries/employee.queries';
 import { DataSource } from 'typeorm';
+
+interface EmployeeCountRow {
+  count: number;
+}
+
+interface EmployeeDetailsRow extends Record<string, unknown> {
+  id: string;
+}
+
+interface JobHistoryRow {
+  changeType: string;
+  effectiveDate: string;
+  departmentId: string | null;
+  positionId: string | null;
+  managerId: string | null;
+  reason: string | null;
+}
 
 @Injectable()
 export class TypeOrmEmployeeQueries implements EmployeeQueries {
@@ -25,11 +43,12 @@ export class TypeOrmEmployeeQueries implements EmployeeQueries {
       );
     const whereSql = where.join(' AND ');
 
-    const [{ count }] = await this.ds.query(
+    const [{ count }] = (await this.ds.query(
       `SELECT COUNT(*)::int AS count FROM employees e WHERE ${whereSql}`,
       params,
-    );
-    const items = await this.ds.query(
+    )) as unknown as EmployeeCountRow[];
+
+    const items = (await this.ds.query(
       `SELECT e.id, e.employee_number AS "employeeNumber",
               e.first_name || ' ' || e.last_name AS "fullName", e.email, e.status,
               e.employment_type AS "employmentType", e.hire_date::text AS "hireDate",
@@ -41,12 +60,12 @@ export class TypeOrmEmployeeQueries implements EmployeeQueries {
         ORDER BY e.created_at DESC
         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
       [...params, f.limit, (f.page - 1) * f.limit],
-    );
+    )) as unknown as EmployeeListItem[];
     return { items, total: count };
   }
 
   async getDetails(companyId: string, id: string) {
-    const [row] = await this.ds.query(
+    const [row] = (await this.ds.query(
       `SELECT e.id, e.employee_number AS "employeeNumber", e.first_name AS "firstName", e.last_name AS "lastName",
               e.email, e.phone, e.date_of_birth::text AS "dateOfBirth", e.gender, e.nationality,
               e.marital_status AS "maritalStatus", e.status, e.employment_type AS "employmentType",
@@ -62,10 +81,10 @@ export class TypeOrmEmployeeQueries implements EmployeeQueries {
          LEFT JOIN employees m ON m.id = e.manager_id
         WHERE e.company_id = $1 AND e.id = $2 AND e.deleted_at IS NULL`,
       [companyId, id],
-    );
+    )) as unknown as EmployeeDetailsRow[];
     if (!row) return null;
 
-    const jobHistory = await this.ds.query(
+    const jobHistory = (await this.ds.query(
       `SELECT change_type AS "changeType", effective_date::text AS "effectiveDate",
               department_id AS "departmentId", position_id AS "positionId",
               manager_id AS "managerId", reason
@@ -73,43 +92,7 @@ export class TypeOrmEmployeeQueries implements EmployeeQueries {
         WHERE company_id = $1 AND employee_id = $2 AND deleted_at IS NULL
         ORDER BY effective_date DESC, created_at DESC`,
       [companyId, id],
-    );
+    )) as unknown as JobHistoryRow[];
     return { ...row, jobHistory };
   }
-
-
-  // Test
-  // async getDetails(companyId: string, employeeId: string) {
-  //   const rows = await this.ds.query(
-  //     `
-  //   SELECT
-  //     e.id,
-  //     e.employee_number AS "employeeNumber",
-  //     e.first_name AS "firstName",
-  //     e.last_name AS "lastName",
-  //     e.email,
-  //     e.phone,
-  //     e.date_of_birth::text AS "dateOfBirth",
-  //     e.gender,
-  //     e.nationality,
-  //     e.marital_status AS "maritalStatus",
-  //     e.status,
-  //     e.employment_type AS "employmentType",
-  //     e.hire_date::text AS "hireDate",
-  //     e.termination_date::text AS "terminationDate",
-  //     e.profile_photo_url AS "profilePhotoUrl",
-  //     e.department_id AS "departmentId",
-  //     e.position_id AS "positionId",
-  //     e.branch_id AS "branchId",
-  //     e.manager_id AS "managerId"
-  //   FROM employees e
-  //   WHERE e.company_id = $1
-  //     AND e.id = $2
-  //     AND e.deleted_at IS NULL
-  //   `,
-  //     [companyId, employeeId],
-  //   );
-
-  //   return rows[0] ?? null;
-  // }
 }

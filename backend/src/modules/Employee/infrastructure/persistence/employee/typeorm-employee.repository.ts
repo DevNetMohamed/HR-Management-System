@@ -1,17 +1,18 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { EmployeeOrmEntity } from "./employee.orm-entity";
-import { EmployeeRepository } from "../../../domain/Employees/repositories/employee.repository";
-import { EmployeeMapper } from "./employee.mapper";
-import { Employee } from "../../../domain/Employees/entities/employee.entity";
-import { JobHistoryOrmEntity } from "../job-history/job-history.orm-entity";
-import { Repository } from "typeorm";
-import { DataSource } from "typeorm";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EmployeeOrmEntity } from './employee.orm-entity';
+import { EmployeeRepository } from '../../../domain/Employees/repositories/employee.repository';
+import { EmployeeMapper } from './employee.mapper';
+import { Employee } from '../../../domain/Employees/entities/employee.entity';
+import { JobHistoryOrmEntity } from '../job-history/job-history.orm-entity';
+import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class TypeOrmEmployeeRepository implements EmployeeRepository {
   constructor(
-    @InjectRepository(EmployeeOrmEntity) private readonly orm: Repository<EmployeeOrmEntity>,
+    @InjectRepository(EmployeeOrmEntity)
+    private readonly orm: Repository<EmployeeOrmEntity>,
     private readonly ds: DataSource,
   ) {}
 
@@ -22,16 +23,22 @@ export class TypeOrmEmployeeRepository implements EmployeeRepository {
 
   async save(e: Employee) {
     await this.ds.transaction(async (m) => {
-      await m.getRepository(EmployeeOrmEntity).save(EmployeeMapper.toOrm(e.toSnapshot()));
+      await m
+        .getRepository(EmployeeOrmEntity)
+        .save(EmployeeMapper.toOrm(e.toSnapshot()));
       if (e.pendingJobHistory.length) {
-        await m.getRepository(JobHistoryOrmEntity).insert(e.pendingJobHistory.map((h) => ({ ...h })));
+        await m
+          .getRepository(JobHistoryOrmEntity)
+          .insert(e.pendingJobHistory.map((h) => ({ ...h })));
       }
     });
     e.markPersisted();
   }
 
   async emailExists(companyId: string, email: string) {
-    return this.orm.exists({ where: { companyId, email: email.trim().toLowerCase() } });
+    return this.orm.exists({
+      where: { companyId, email: email.trim().toLowerCase() },
+    });
   }
 
   async nextEmployeeNumber(companyId: string) {
@@ -42,5 +49,4 @@ export class TypeOrmEmployeeRepository implements EmployeeRepository {
     );
     return `EMP-${String(n).padStart(5, '0')}`;
   }
-
 }
