@@ -31,24 +31,23 @@ jobs:
   build:
     name: 1 · Build
     if: github.ref == 'refs/heads/ci/cd'
-    # if: contains(fromJSON('["refs/heads/dev","refs/heads/ci/cd"]'), github.ref)          # manual runs from other branches are skipped
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: ${{ env.APP_DIR }}
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
         with:
-          version: 12.11.2
-          package_json_file: ${{ env.APP_DIR }}/package.json
+          package_json_file: ${{ env.APP_DIR }}/package.json   # pnpm version comes from "packageManager"
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: ${{ env.APP_DIR }}/pnpm-lock.yaml
+      - run: pnpm -v
       - run: pnpm install --frozen-lockfile
       - run: pnpm run --if-present lint
       - run: pnpm build
@@ -59,6 +58,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -73,16 +75,21 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/hrms_test
-      FIELD_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000000"
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ env.APP_DIR }}/package.json
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+          cache-dependency-path: ${{ env.APP_DIR }}/pnpm-lock.yaml
+      - run: pnpm -v
       - run: pnpm install --frozen-lockfile
+      - name: Generate a throwaway encryption key (64 hex chars)
+        run: echo "FIELD_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       - name: Unit tests
         run: pnpm test
       - name: Migrations apply cleanly on an empty database
@@ -130,7 +137,6 @@ jobs:
           name: hrms-image
           path: ${{ runner.temp }}
 
-      # Informational report: shows everything MEDIUM and above, never fails
       - name: Trivy report
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0, verify the SHA
         with:
@@ -160,7 +166,6 @@ jobs:
           path: trivy-report.txt
           retention-days: 14
 
-      # The gate: fails the pipeline, so nothing gets pushed
       - name: Trivy gate
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0, verify the SHA
         with:
