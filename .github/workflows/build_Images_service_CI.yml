@@ -29,7 +29,8 @@ jobs:
   # ───────────── Stage 1 ─────────────
   build:
     name: 1 · Build
-    if: github.ref == 'refs/heads/cicd'          # manual runs from other branches are skipped
+    if: github.ref == 'refs/heads/ci/cd'
+    # if: contains(fromJSON('["refs/heads/dev","refs/heads/ci/cd"]'), github.ref)          # manual runs from other branches are skipped
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -184,11 +185,12 @@ jobs:
         run: |
           set -euo pipefail
           SHA7="${GITHUB_SHA::7}"
+          BRANCH_TAG="${GITHUB_REF_NAME//\//-}"          # ci/cd  ->  ci-cd
           docker load -i "$RUNNER_TEMP/image.tar"
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-          for tag in "dev-${SHA7}" "dev"; do
+          for tag in "${BRANCH_TAG}-${SHA7}" "${BRANCH_TAG}"; do
             docker tag "$LOCAL_TAG" "$IMAGE:$tag"
             docker push "$IMAGE:$tag"
           done
           docker logout
-          echo "Pushed \`$IMAGE:dev-${SHA7}\` and \`$IMAGE:dev\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pushed \`$IMAGE:${BRANCH_TAG}-${SHA7}\` and \`$IMAGE:${BRANCH_TAG}\`" >> "$GITHUB_STEP_SUMMARY"
