@@ -1,0 +1,192 @@
+name: HRMS CI (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      push_image:
+        description: Push the image to Docker Hub after a clean scan
+        type: boolean
+        default: true
+      severity_gate:
+        description: Fail when FIXABLE vulnerabilities of these severities exist
+        type: choice
+        options: ["CRITICAL,HIGH", "CRITICAL"]
+        default: "CRITICAL,HIGH"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hrms-ci-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+  IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/hrms
+  LOCAL_TAG: hrms:ci
+
+jobs:
+  # ───────────── Stage 1 ─────────────
+  build:
+    name: 1 · Build
+    if: github.ref == 'refs/heads/dev'          # manual runs from other branches are skipped
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run --if-present lint
+      - run: pnpm build
+
+  # ───────────── Stage 2 ─────────────
+  test:
+    name: 2 · Test
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hrms_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/hrms_test
+      FIELD_ENCRYPTION_KEY: ${{ env.FIELD_ENCRYPTION_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+      - name: Migrations apply cleanly on an empty database
+        run: pnpm migration:run
+      - name: e2e tests
+        run: pnpm run --if-present test:e2e
+
+  # ───────────── Stage 3a: build the image ─────────────
+  image-build:
+    name: 3a · Build image
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ env.LOCAL_TAG }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          outputs: type=docker,dest=${{ runner.temp }}/image.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrms-image
+          path: ${{ runner.temp }}/image.tar
+          retention-days: 1
+
+  # ───────────── Stage 3b: Trivy (no secrets in this job) ─────────────
+  image-scan:
+    name: 3b · Trivy scan
+    needs: image-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: hrms-image
+          path: ${{ runner.temp }}
+
+      # Informational report: shows everything MEDIUM and above, never fails
+      - name: Trivy report
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0, verify the SHA
+        with:
+          input: ${{ runner.temp }}/image.tar
+          version: v0.69.3
+          scanners: vuln,secret
+          severity: MEDIUM,HIGH,CRITICAL
+          format: table
+          output: trivy-report.txt
+          exit-code: "0"
+
+      - name: Show the report
+        if: always()
+        run: |
+          cat trivy-report.txt
+          {
+            echo '## Trivy scan'
+            echo '```'
+            head -c 100000 trivy-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-report
+          path: trivy-report.txt
+          retention-days: 14
+
+      # The gate: fails the pipeline, so nothing gets pushed
+      - name: Trivy gate
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0, verify the SHA
+        with:
+          input: ${{ runner.temp }}/image.tar
+          version: v0.69.3
+          scanners: vuln,secret
+          severity: ${{ inputs.severity_gate || 'CRITICAL,HIGH' }}
+          ignore-unfixed: true
+          format: table
+          exit-code: "1"
+
+  # ───────────── Stage 3c: push (only job with secrets) ─────────────
+  image-push:
+    name: 3c · Push to Docker Hub
+    needs: image-scan
+    if: ${{ inputs.push_image }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: dockerhub
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: hrms-image
+          path: ${{ runner.temp }}
+      - name: Load, tag and push
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHA7="${GITHUB_SHA::7}"
+          docker load -i "$RUNNER_TEMP/image.tar"
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          for tag in "dev-${SHA7}" "dev"; do
+            docker tag "$LOCAL_TAG" "$IMAGE:$tag"
+            docker push "$IMAGE:$tag"
+          done
+          docker logout
+          echo "Pushed \`$IMAGE:dev-${SHA7}\` and \`$IMAGE:dev\`" >> "$GITHUB_STEP_SUMMARY"

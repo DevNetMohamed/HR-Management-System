@@ -17,9 +17,9 @@ export class EmployeeBankAccountUseCases {
         private readonly employees: EmployeeGuard,
     ){}
 
-    private async assertIbanFree(a: EmployeeBankAccount) {
-        const { companyId, employeeId, iban } = a.snapshot;
-        if (await this.account.existsIban(companyId, employeeId, iban, a.id))
+    private async assertIbanFree(account: EmployeeBankAccount) {
+        const { companyId, employeeId, iban } = account.snapshot;
+        if (await this.account.existsIban(companyId, employeeId, iban, account.id))
         {
             throw new ConflictError('This IBAN is already registered for the employee');
         }
@@ -92,7 +92,7 @@ export class EmployeeBankAccountUseCases {
     {
         await this.employees.assertEditable(cmd.companyId, cmd.employeeId);
         const {bankName, iban, accountNumber} = (await this.load(cmd)).snapshot;
-        // TODO(audit_logs)
+        // TODO (audit_logs)
         return {
             bankName,
             iban,
