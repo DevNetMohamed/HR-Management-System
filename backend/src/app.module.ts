@@ -6,6 +6,7 @@ import { SecurityModule } from './infrastructure/security/security.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { EmployeeModule } from './modules/Employee/employee.module';
 import { OvertimeRequestModule } from './modules/OvertimeRequest/overtime-request.module';
+import { CompanyModule } from './modules/Company/company.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -19,6 +20,7 @@ import { HealthController } from './health/health.controller';
     EmployeeModule,
     SecurityModule,
     OvertimeRequestModule,
+    CompanyModule,
   ],
   controllers: [HealthController],
 })
