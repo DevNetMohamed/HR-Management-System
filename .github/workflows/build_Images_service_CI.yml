@@ -41,6 +41,7 @@ jobs:
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
         with:
+          version: 12.11.2
           package_json_file: ${{ env.APP_DIR }}/package.json   # pnpm version comes from "packageManager"
       - uses: actions/setup-node@v5
         with:
@@ -80,6 +81,7 @@ jobs:
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
         with:
+          version: 12.11.2
           package_json_file: ${{ env.APP_DIR }}/package.json
       - uses: actions/setup-node@v5
         with:
@@ -184,7 +186,7 @@ jobs:
     if: ${{ inputs.push_image }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: dockerhub
+    environment: "dockerhub"
     steps:
       - uses: actions/download-artifact@v4
         with:
