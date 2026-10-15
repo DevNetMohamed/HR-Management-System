@@ -86,11 +86,15 @@ pipeline {
         // }
 
         stage('Integration Tests (E2E)') {
-            environment {
+           environment {
                 DB_NAME = 'hrms_ci_db'
                 DB_USERNAME = 'ci_user'
                 DB_PASSWORD = 'ci_password'
                 JWT_SECRET = 'test-secret-key-for-ci'
+                DOCUMENTS_BUCKET = 'hrms-ci-documents'
+                AWS_REGION = 'us-east-1'
+                AWS_ACCESS_KEY_ID = 'ci-access-key'
+                AWS_SECRET_ACCESS_KEY = 'ci-secret-key'
             }
             steps {
                 sh '''
@@ -108,6 +112,8 @@ pipeline {
                     trap on_exit EXIT
 
                     # 1. Generate the .env file dynamically for Docker Compose
+                    FIELD_ENCRYPTION_KEY=$(openssl rand -hex 32)
+
                     {
                         echo "DB_NAME=${DB_NAME}"
                         echo "DB_USERNAME=${DB_USERNAME}"
@@ -115,6 +121,12 @@ pipeline {
                         echo "DB_HOST=db"
                         echo "DB_PORT=5432"
                         echo "PORT=8080"
+                        echo "JWT_SECRET=${JWT_SECRET}"
+                        echo "DOCUMENTS_BUCKET=${DOCUMENTS_BUCKET}"
+                        echo "AWS_REGION=${AWS_REGION}"
+                        echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
+                        echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+                        echo "FIELD_ENCRYPTION_KEY=${FIELD_ENCRYPTION_KEY}"
                     } > backend/.env
 
                     # 2. Spin up the environment (Postgres -> Migrations -> Backend)
