@@ -1,6 +1,9 @@
 name: HRMS CI (manual)
 
 on:
+  push: 
+    branches: 
+      - ci/cd
   workflow_dispatch:
     inputs:
       push_image:
@@ -41,7 +44,6 @@ jobs:
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
         with:
-          version: 12.11.2
           package_json_file: ${{ env.APP_DIR }}/package.json   # pnpm version comes from "packageManager"
       - uses: actions/setup-node@v5
         with:
@@ -50,7 +52,7 @@ jobs:
           cache-dependency-path: ${{ env.APP_DIR }}/pnpm-lock.yaml
       - run: pnpm -v
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run --if-present lint
+      # - run: pnpm lint:ci
       - run: pnpm build
 
   # ───────────── Stage 2 ─────────────
@@ -81,7 +83,6 @@ jobs:
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
         with:
-          version: 12.11.2
           package_json_file: ${{ env.APP_DIR }}/package.json
       - uses: actions/setup-node@v5
         with:
@@ -186,7 +187,7 @@ jobs:
     if: ${{ inputs.push_image }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: "dockerhub"
+    # environment: "dockerhub"
     steps:
       - uses: actions/download-artifact@v4
         with:

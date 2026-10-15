@@ -7,6 +7,7 @@ import { ConflictError } from 'src/modules/Employee/application/errors';
 import { EmployeeDocumentMapper } from './employee-document.mapper';
 import { EmployeeDocument } from 'src/modules/Employee/domain/employee-document/entities/employee-document.class';
 import { EmployeeDocumentType } from 'src/modules/Employee/domain/employee-document/enums/employee-document.enums';
+import { pgError } from 'src/infrastructure/database/error/pg-error';
 
 const UNIQUE_VIOLATION = '23505';
 
@@ -15,7 +16,7 @@ export class TypeOrmEmployeeDocumentRepository implements EmployeeDocumentReposi
   constructor(
     @InjectRepository(EmployeeDocumentOrmEntity)
     private readonly orm: Repository<EmployeeDocumentOrmEntity>,
-  ) {}
+  ) { }
 
   private translate(e: unknown): unknown {
     if (
@@ -43,8 +44,17 @@ export class TypeOrmEmployeeDocumentRepository implements EmployeeDocumentReposi
   async save(d: EmployeeDocument) {
     try {
       await this.orm.save(EmployeeDocumentMapper.toOrm(d.snapshot));
-    } catch (e) {
-      throw this.translate(e);
+    } catch (error) {
+      const pg = pgError(error);
+      if (pg?.code === UNIQUE_VIOLATION) {
+        if (pg.constraint === 'employee_documents_one_per_type_uq') {
+          throw new ConflictError('Employee already has a document of this type. Replace its file instead');
+        }
+        if (pg.constraint === 'employee_documents_file_key_uq') {
+          throw new ConflictError('This file is already attached to a document');
+        }
+      }
+      throw error;
     }
   }
 

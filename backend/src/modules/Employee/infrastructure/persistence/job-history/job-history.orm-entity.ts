@@ -5,7 +5,6 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryColumn,
 } from 'typeorm';
 import { EmployeeOrmEntity } from '../employee/employee.orm-entity';

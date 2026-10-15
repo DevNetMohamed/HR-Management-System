@@ -42,11 +42,11 @@ export class TypeOrmEmployeeRepository implements EmployeeRepository {
   }
 
   async nextEmployeeNumber(companyId: string) {
-    const [{ n }] = await this.ds.query(
+    const row = await this.ds.query<{ n: number }[]>(
       `SELECT COALESCE(MAX(NULLIF(regexp_replace(employee_number, '\\D', '', 'g'), '')::int), 0) + 1 AS n
         FROM employees WHERE company_id = $1`,
       [companyId],
     );
-    return `EMP-${String(n).padStart(5, '0')}`;
+    return `EMP-${String(row[0].n).padStart(5, '0')}`;
   }
 }

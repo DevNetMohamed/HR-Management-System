@@ -11,7 +11,7 @@ export interface EmployeeDependentProps {
   company_id: string;
   employee_id: string;
   name: string;
-  relationship: string;
+  relationship: DependentRelationship;
   dateOfBirth: IsoDate | null;
   coveredByInsurance: boolean;
 }
