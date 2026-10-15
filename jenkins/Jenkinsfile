@@ -1,0 +1,167 @@
+
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(
+            numToKeepStr: '20',
+            artifactNumToKeepStr: '10'
+        ))
+    }
+
+    tools {
+        nodejs 'NodeJS-22'
+    }
+
+    environment {
+        CI = 'true'
+        IMAGE_NAME = 'mohamedadel204/hrms'
+        TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    env.IMAGE_TAG = sh(
+                        script: 'git rev-parse --short=12 HEAD',
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+
+        stage('Validate Environment') {
+            steps {
+                sh '''
+                    set -eu
+                    node --version
+                    corepack --version
+                    docker --version
+                    trivy --version
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        set -eu
+                        corepack pnpm@12.11.2 install --frozen-lockfile
+                    '''
+                }
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                dir('backend') {
+                    sh 'corepack pnpm@12.11.2 run lint:ci'
+                }
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        corepack pnpm@12.11.2 exec jest \
+                            --runInBand \
+                            --coverage
+                    '''
+                }
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                dir('backend') {
+                    sh 'corepack pnpm@12.11.2 run build'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    set -eu
+                    docker build \
+                        -f backend/Dockerfile \
+                        -t "${IMAGE_NAME}:${IMAGE_TAG}" \
+                        backend
+                '''
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh '''
+                    set -eu
+                    mkdir -p reports
+
+                    trivy image \
+                        --cache-dir "${TRIVY_CACHE_DIR}" \
+                        --scanners vuln \
+                        --severity HIGH,CRITICAL \
+                        --ignore-unfixed \
+                        --exit-code 1 \
+                        --format json \
+                        --output reports/trivy-image.json \
+                        "${IMAGE_NAME}:${IMAGE_TAG}"
+                '''
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKER_TOKEN_JENGINS'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        echo "$DOCKER_TOKEN_JENGINS" |
+                            docker login \
+                                --username "$DOCKERHUB_USER" \
+                                --password-stdin
+
+                        docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts(
+                artifacts: 'reports/**,backend/coverage/**',
+                allowEmptyArchive: true
+            )
+            echo 'HRMS pipeline finished.'
+        }
+
+        success {
+            echo 'CI passed, image scanned, and image pushed.'
+        }
+
+        failure {
+            echo 'Pipeline failed. Inspect the first failed stage.'
+        }
+
+        cleanup {
+            sh '''
+                docker logout || true
+            '''
+        }
+    }
+}
