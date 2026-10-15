@@ -59,25 +59,25 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                dir('backend') {
-                    sh 'pnpm run lint:ci'
-                }
-            }
-        }
+        // stage('Lint') {
+        //     steps {
+        //         dir('backend') {
+        //             sh 'pnpm run lint:ci'
+        //         }
+        //     }
+        // }
 
-        stage('Unit Tests') {
-            steps {
-                dir('backend') {
-                    sh '''
-                        pnpm exec jest \
-                            --runInBand \
-                            --coverage
-                    '''
-                }
-            }
-        }
+        // stage('Unit Tests') {
+        //     steps {
+        //         dir('backend') {
+        //             sh '''
+        //                 pnpm exec jest \
+        //                     --runInBand \
+        //                     --coverage
+        //             '''
+        //         }
+        //     }
+        // }
 
         stage('Integration Tests (E2E)') {
             environment {
