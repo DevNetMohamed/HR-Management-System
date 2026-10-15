@@ -84,19 +84,31 @@ pipeline {
                 DB_NAME = 'hrms_ci_db'
                 DB_USERNAME = 'ci_user'
                 DB_PASSWORD = 'ci_password'
+                JWT_SECRET = 'test-secret-key-for-ci'
             }
             steps {
                 sh '''
                     set -eu
                     
-                    # 1. Spin up the environment (Postgres -> Migrations -> Backend)
+                    # 1. Generate the .env file dynamically for Docker Compose
+                    cat <<EOF > backend/.env
+DB_NAME=${DB_NAME}
+DB_USERNAME=${DB_USERNAME}
+DB_PASSWORD=${DB_PASSWORD}
+DB_HOST=db
+DB_PORT=5432
+PORT=8080
+JWT_SECRET=${JWT_SECRET}
+EOF
+                    
+                    # 2. Spin up the environment (Postgres -> Migrations -> Backend)
                     docker compose up --build -d
 
-                    # 2. Extract the dynamically assigned host port
+                    # 3. Extract the dynamically assigned host port
                     DYNAMIC_PORT=$(docker compose port backend 8080 | cut -d: -f2)
                     echo "Backend dynamically assigned to port: $DYNAMIC_PORT"
                     
-                    # 3. Wait for the API to accept traffic
+                    # 4. Wait for the API to accept traffic
                     echo "Waiting for Backend to start..."
                     until $(curl --output /dev/null --silent --fail http://localhost:$DYNAMIC_PORT/); do
                         printf '.'
@@ -104,7 +116,7 @@ pipeline {
                     done
                     echo " Backend is up!"
 
-                    # 4. Inject port and run Jest E2E tests
+                    # 5. Inject port and run Jest E2E tests
                     export PORT=$DYNAMIC_PORT
                     cd backend
                     pnpm exec jest --config ./test/jest-e2e.json --runInBand
