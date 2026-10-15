@@ -48,5 +48,22 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+
+  e2e:
+    build:
+      context: ./backend
+      target: build
+    profiles: ["test"]
+    command: pnpm exec jest --config ./test/jest-e2e.json --runInBand
+    env_file: ./backend/.env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
 volumes:
   pgdata:
