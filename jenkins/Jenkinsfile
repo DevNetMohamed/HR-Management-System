@@ -142,7 +142,7 @@ pipeline {
                     READY=0
                     echo "Waiting for Backend to start..."
                     for i in $(seq 1 60); do
-                        code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${DYNAMIC_PORT}/" || true)
+                        code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${DYNAMIC_PORT}/health" || true)
                         if [ -n "$code" ] && [ "$code" != "000" ]; then
                             READY=1
                             break
