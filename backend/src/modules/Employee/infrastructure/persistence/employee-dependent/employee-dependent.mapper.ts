@@ -3,6 +3,7 @@ import {
   EmployeeDependentProps,
 } from 'src/modules/Employee/domain/employee-dependents/entities/employee-dependents.entity';
 import { EmployeeDependentOrmEntity } from './employee-dependent.orm-entity';
+import { DependentRelationship } from 'src/modules/Employee/domain/employee-dependents/enums/employee-dependent.enums';
 
 export class EmployeeDependentMapper {
   static toDomain(orm: EmployeeDependentOrmEntity): EmployeeDependent {
@@ -11,7 +12,7 @@ export class EmployeeDependentMapper {
       company_id: orm.companyId,
       employee_id: orm.employeeId,
       name: orm.name,
-      relationship: orm.relationship,
+      relationship: orm.relationship as DependentRelationship,
       dateOfBirth: orm.dateOfBirth,
       coveredByInsurance: orm.coveredByInsurance,
     });
