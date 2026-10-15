@@ -53,7 +53,7 @@ pipeline {
                     sh '''
                         set -eu
                         corepack enable
-                        pnpm install --frozen-lockfile --ignore-workspace
+                        pnpm install --frozen-lockfile
                     '''
                 }
             }
@@ -75,6 +75,45 @@ pipeline {
                             --runInBand \
                             --coverage
                     '''
+                }
+            }
+        }
+
+        stage('Integration Tests (E2E)') {
+            environment {
+                DB_NAME = 'hrms_ci_db'
+                DB_USERNAME = 'ci_user'
+                DB_PASSWORD = 'ci_password'
+            }
+            steps {
+                sh '''
+                    set -eu
+                    
+                    # 1. Spin up the environment (Postgres -> Migrations -> Backend)
+                    docker compose up --build -d
+
+                    # 2. Extract the dynamically assigned host port
+                    DYNAMIC_PORT=$(docker compose port backend 8080 | cut -d: -f2)
+                    echo "Backend dynamically assigned to port: $DYNAMIC_PORT"
+                    
+                    # 3. Wait for the API to accept traffic
+                    echo "Waiting for Backend to start..."
+                    until $(curl --output /dev/null --silent --fail http://localhost:$DYNAMIC_PORT/); do
+                        printf '.'
+                        sleep 2
+                    done
+                    echo " Backend is up!"
+
+                    # 4. Inject port and run Jest E2E tests
+                    export PORT=$DYNAMIC_PORT
+                    cd backend
+                    pnpm exec jest --config ./test/jest-e2e.json --runInBand
+                '''
+            }
+            post {
+                always {
+                    // Destroy the environment and delete the pgdata volume (-v)
+                    sh 'docker compose down -v || true'
                 }
             }
         }
@@ -129,7 +168,7 @@ pipeline {
                 ]) {
                     sh '''
                         set -eu
-                        echo "$DOCKER_TOKEN_JENGINS" |
+                        echo "$DOCKER_TOKEN_JENGINS" | \
                             docker login \
                                 --username "$DOCKERHUB_USER" \
                                 --password-stdin
@@ -159,9 +198,7 @@ pipeline {
         }
 
         cleanup {
-            sh '''
-                docker logout || true
-            '''
+            sh 'docker logout || true'
         }
     }
 }
