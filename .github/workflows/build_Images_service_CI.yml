@@ -95,6 +95,8 @@ jobs:
         run: echo "FIELD_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       # - name: Unit tests
       #   run: pnpm test
+      - name: Generate Migrations Entities
+        run: pnpm migration:generate
       - name: Migrations apply cleanly on an empty database
         run: pnpm migration:run
       - name: e2e tests
