@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -53,7 +52,8 @@ pipeline {
                 dir('backend') {
                     sh '''
                         set -eu
-                        corepack pnpm@12.11.2 install --frozen-lockfile
+                        corepack enable
+                        pnpm install --frozen-lockfile
                     '''
                 }
             }
@@ -62,7 +62,7 @@ pipeline {
         stage('Lint') {
             steps {
                 dir('backend') {
-                    sh 'corepack pnpm@12.11.2 run lint:ci'
+                    sh 'pnpm run lint:ci'
                 }
             }
         }
@@ -71,7 +71,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh '''
-                        corepack pnpm@12.11.2 exec jest \
+                        pnpm exec jest \
                             --runInBand \
                             --coverage
                     '''
@@ -82,7 +82,7 @@ pipeline {
         stage('Build Application') {
             steps {
                 dir('backend') {
-                    sh 'corepack pnpm@12.11.2 run build'
+                    sh 'pnpm run build'
                 }
             }
         }
