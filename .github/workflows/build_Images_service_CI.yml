@@ -78,6 +78,11 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/hrms_test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: hrms_test
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
@@ -95,10 +100,10 @@ jobs:
         run: echo "FIELD_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       # - name: Unit tests
       #   run: pnpm test
-      - name: Generate Migrations Entities
-        run: pnpm migration:generate
+      
       - name: Migrations apply cleanly on an empty database
         run: pnpm migration:run
+
       - name: e2e tests
         run: pnpm run --if-present test:e2e
 
