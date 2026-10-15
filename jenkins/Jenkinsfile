@@ -20,6 +20,9 @@ pipeline {
         CI = 'true'
         IMAGE_NAME = 'mohamedadel204/hrms'
         TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
+        // Unique compose project per build: no clashes with leftover stacks.
+        // Docker Compose reads this variable automatically (up, port, logs, down).
+        COMPOSE_PROJECT_NAME = "hrms-ci-${BUILD_NUMBER}"
     }
 
     stages {
@@ -42,6 +45,9 @@ pipeline {
                     node --version
                     corepack --version
                     docker --version
+                    # Fails fast if the jenkins user cannot reach the Docker daemon
+                    docker info > /dev/null
+                    docker compose version
                     trivy --version
                 '''
             }
@@ -53,7 +59,7 @@ pipeline {
                     sh '''
                         set -eu
                         corepack enable
-                        pnpm install
+                        pnpm install --frozen-lockfile
                     '''
                 }
             }
@@ -89,43 +95,69 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-                    
+
+                    # Print compose status and logs if anything below fails
+                    on_exit() {
+                        rc=$?
+                        if [ "$rc" -ne 0 ]; then
+                            echo "---- E2E stage failed (exit $rc): compose status and logs ----"
+                            docker compose ps -a || true
+                            docker compose logs --no-color --tail=150 || true
+                        fi
+                    }
+                    trap on_exit EXIT
+
                     # 1. Generate the .env file dynamically for Docker Compose
-                    cat <<EOF > backend/.env
-DB_NAME=${DB_NAME}
-DB_USERNAME=${DB_USERNAME}
-DB_PASSWORD=${DB_PASSWORD}
-DB_HOST=db
-DB_PORT=5432
-PORT=8080
-JWT_SECRET=${JWT_SECRET}
-EOF
-                    
+                    {
+                        echo "DB_NAME=${DB_NAME}"
+                        echo "DB_USERNAME=${DB_USERNAME}"
+                        echo "DB_PASSWORD=${DB_PASSWORD}"
+                        echo "DB_HOST=db"
+                        echo "DB_PORT=5432"
+                        echo "PORT=8080"
+                    } > backend/.env
+
                     # 2. Spin up the environment (Postgres -> Migrations -> Backend)
                     docker compose up --build -d
 
                     # 3. Extract the dynamically assigned host port
-                    DYNAMIC_PORT=$(docker compose port backend 8080 | cut -d: -f2)
-                    echo "Backend dynamically assigned to port: $DYNAMIC_PORT"
-                    
-                    # 4. Wait for the API to accept traffic
+                    #    (head -n1 handles dual IPv4/IPv6 output, $NF handles "[::]:12345")
+                    DYNAMIC_PORT=$(docker compose port backend 8080 | head -n1 | awk -F: '{print $NF}')
+                    echo "Backend dynamically assigned to port: ${DYNAMIC_PORT}"
+
+                    # 4. Wait (max ~120s) for the API to accept traffic.
+                    #    Any HTTP response counts as "up", so a 404 on / is fine.
+                    READY=0
                     echo "Waiting for Backend to start..."
-                    until $(curl --output /dev/null --silent --fail http://localhost:$DYNAMIC_PORT/); do
+                    for i in $(seq 1 60); do
+                        code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${DYNAMIC_PORT}/" || true)
+                        if [ -n "$code" ] && [ "$code" != "000" ]; then
+                            READY=1
+                            break
+                        fi
                         printf '.'
                         sleep 2
                     done
-                    echo " Backend is up!"
+                    echo
+                    if [ "$READY" -ne 1 ]; then
+                        echo "Backend did not respond within 120s"
+                        exit 1
+                    fi
+                    echo "Backend is up (HTTP ${code})"
 
                     # 5. Inject port and run Jest E2E tests
-                    export PORT=$DYNAMIC_PORT
+                    export PORT="${DYNAMIC_PORT}"
                     cd backend
                     pnpm exec jest --config ./test/jest-e2e.json --runInBand
                 '''
             }
             post {
                 always {
-                    // Destroy the environment and delete the pgdata volume (-v)
-                    sh 'docker compose down -v || true'
+                    // Destroy the environment, the pgdata volume (-v) and the generated .env
+                    sh '''
+                        docker compose down -v --remove-orphans || true
+                        rm -f backend/.env
+                    '''
                 }
             }
         }
@@ -143,6 +175,7 @@ EOF
                 sh '''
                     set -eu
                     docker build \
+                        --pull \
                         -f backend/Dockerfile \
                         -t "${IMAGE_NAME}:${IMAGE_TAG}" \
                         backend
@@ -162,6 +195,8 @@ EOF
                         --severity HIGH,CRITICAL \
                         --ignore-unfixed \
                         --exit-code 1 \
+                        --no-progress \
+                        --timeout 15m \
                         --format json \
                         --output reports/trivy-image.json \
                         "${IMAGE_NAME}:${IMAGE_TAG}"
@@ -210,7 +245,12 @@ EOF
         }
 
         cleanup {
-            sh 'docker logout || true'
+            sh '''
+                docker logout || true
+                # Free disk on the agent: remove the built image and dangling layers
+                docker image rm "${IMAGE_NAME}:${IMAGE_TAG}" || true
+                docker image prune -f || true
+            '''
         }
     }
 }
