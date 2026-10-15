@@ -3,3 +3,5 @@ allowBuilds:
   "@scarf/scarf": false
   esbuild: false
   unrs-resolver: false
+packages:
+  - 'backend'
