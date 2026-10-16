@@ -86,7 +86,7 @@ pipeline {
         // }
 
         stage('Integration Tests (E2E)') {
-           environment {
+            environment {
                 DB_NAME = 'hrms_ci_db'
                 DB_USERNAME = 'ci_user'
                 DB_PASSWORD = 'ci_password'
@@ -99,21 +99,19 @@ pipeline {
             steps {
                 sh '''
                     set -eu
+                    set +x   # don't echo expanded secrets into the Jenkins log
 
-                    # Print compose status and logs if anything below fails
                     on_exit() {
                         rc=$?
                         if [ "$rc" -ne 0 ]; then
-                            echo "---- E2E stage failed (exit $rc): compose status and logs ----"
+                            echo "---- E2E stage failed (exit $rc) ----"
                             docker compose ps -a || true
                             docker compose logs --no-color --tail=150 || true
                         fi
                     }
                     trap on_exit EXIT
 
-                    # 1. Generate the .env file dynamically for Docker Compose
                     FIELD_ENCRYPTION_KEY=$(openssl rand -hex 32)
-
                     {
                         echo "DB_NAME=${DB_NAME}"
                         echo "DB_USERNAME=${DB_USERNAME}"
@@ -129,43 +127,18 @@ pipeline {
                         echo "FIELD_ENCRYPTION_KEY=${FIELD_ENCRYPTION_KEY}"
                     } > backend/.env
 
-                    # 2. Spin up the environment (Postgres -> Migrations -> Backend)
-                    docker compose up --build -d
+                    # 1. Smoke test: real image boots and passes its own healthcheck
+                    docker compose up --build -d --wait backend
+                    PORT_=$(docker compose port backend 8080 | head -n1 | awk -F: '{print $NF}')
+                    curl -fsS "http://localhost:${PORT_}/health"
 
-                    # 3. Extract the dynamically assigned host port
-                    #    (head -n1 handles dual IPv4/IPv6 output, $NF handles "[::]:12345")
-                    DYNAMIC_PORT=$(docker compose port backend 8080 | head -n1 | awk -F: '{print $NF}')
-                    echo "Backend dynamically assigned to port: ${DYNAMIC_PORT}"
-
-                    # 4. Wait (max ~120s) for the API to accept traffic.
-                    #    Any HTTP response counts as "up", so a 404 on / is fine.
-                    READY=0
-                    echo "Waiting for Backend to start..."
-                    for i in $(seq 1 60); do
-                        code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${DYNAMIC_PORT}/health" || true)
-                        if [ -n "$code" ] && [ "$code" != "000" ]; then
-                            READY=1
-                            break
-                        fi
-                        printf '.'
-                        sleep 2
-                    done
-                    echo
-                    if [ "$READY" -ne 1 ]; then
-                        echo "Backend did not respond within 120s"
-                        exit 1
-                    fi
-                    echo "Backend is up (HTTP ${code})"
-
-                    # 5. Inject port and run Jest E2E tests
-                    export PORT="${DYNAMIC_PORT}"
-                    cd backend
-                    pnpm exec jest --config ./test/jest-e2e.json --runInBand
+                    # 2. E2E suite: runs INSIDE the compose network, so "db" resolves.
+                    #    --exit-code semantics: run returns the test container's exit code.
+                    docker compose run --rm --build e2e
                 '''
             }
             post {
                 always {
-                    // Destroy the environment, the pgdata volume (-v) and the generated .env
                     sh '''
                         docker compose down -v --remove-orphans || true
                         rm -f backend/.env
@@ -173,6 +146,8 @@ pipeline {
                 }
             }
         }
+
+
 
         stage('Build Application') {
             steps {
