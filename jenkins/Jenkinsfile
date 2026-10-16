@@ -20,10 +20,7 @@ pipeline {
         CI = 'true'
         IMAGE_NAME = 'mohamedadel204/hrms'
         TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
-        // Unique compose project per build: no clashes with leftover stacks.
-        // Docker Compose reads this variable automatically (up, port, logs, down).
         COMPOSE_PROJECT_NAME = "hrms-ci-${BUILD_NUMBER}"
-        // Single source of truth for compose variables: the committed .env.ci
         DC = 'docker compose --env-file .env.ci'
     }
 
@@ -76,6 +73,7 @@ pipeline {
         //         }
         //     }
         // }
+
 
         // stage('Unit Tests') {
         //     steps {
