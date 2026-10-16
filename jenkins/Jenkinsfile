@@ -94,7 +94,7 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-                    set +x   # do not echo expanded values into the Jenkins log
+                    set +x
 
                     on_exit() {
                         rc=$?
@@ -106,17 +106,18 @@ pipeline {
                     }
                     trap on_exit EXIT
 
-                    # Build once: compose tags the backend image with its final name,
-                    # so the image tested here is the one scanned and pushed later.
                     export BACKEND_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
 
-                    # 1. Smoke test: the real image boots and passes its healthcheck
-                    $DC up --build -d --wait --wait-timeout 120 backend
+                    # 1. DB + migrations, with live logs (db stays running afterwards)
+                    $DC run --rm --build migrate
+
+                    # 2. Backend smoke test; --no-deps so migrate is not run again
+                    $DC up -d --build --no-deps --wait --wait-timeout 300 backend
                     PORT_=$($DC port backend 9090 | head -n1 | awk -F: '{print $NF}')
                     curl -fsS "http://localhost:${PORT_}/health"
 
-                    # 2. E2E suite inside the compose network, so "db" resolves
-                    $DC run --rm --build e2e
+                    # 3. E2E suite inside the compose network
+                    $DC run --rm --build --no-deps e2e
                 '''
             }
             post {
