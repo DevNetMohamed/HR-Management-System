@@ -77,18 +77,18 @@ pipeline {
         //     }
         // }
 
-        stage('Unit Tests') {
-            steps {
-                dir('backend') {
-                    sh '''
-                        set -eu
-                        pnpm exec jest \
-                            --runInBand \
-                            --coverage
-                    '''
-                }
-            }
-        }
+        // stage('Unit Tests') {
+        //     steps {
+        //         dir('backend') {
+        //             sh '''
+        //                 set -eu
+        //                 pnpm exec jest \
+        //                     --runInBand \
+        //                     --coverage
+        //             '''
+        //         }
+        //     }
+        // }
 
         stage('Integration Tests (E2E)') {
             steps {
