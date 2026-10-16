@@ -94,42 +94,40 @@ pipeline {
                     DC = 'docker compose --env-file .env.ci'
                 }
             stage('Integration Tests (E2E)') {
-            steps {
-                sh '''
-                    set -eu
-                    set +x
+                steps {
+                    sh '''
+                        set -eu
+                        set +x
 
-                    on_exit() {
-                        rc=$?
-                        if [ "$rc" -ne 0 ]; then
-                            echo "---- E2E stage failed (exit $rc) ----"
-                            $DC ps -a || true
-                            $DC logs --no-color --tail=150 || true
-                        fi
+                        on_exit() {
+                            rc=$?
+                            if [ "$rc" -ne 0 ]; then
+                                echo "---- E2E stage failed (exit $rc) ----"
+                                $DC ps -a || true
+                                $DC logs --no-color --tail=150 || true
+                            fi
+                        }
+                        trap on_exit EXIT
+
+                        # Tag the compose-built image with its final name (build once)
+                        export BACKEND_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
+
+                        # 1. Smoke test: image boots and passes its own healthcheck
+                        $DC up --build -d --wait --wait-timeout 120 backend
+                        PORT_=$($DC port backend 9090 | head -n1 | awk -F: '{print $NF}')
+                        curl -fsS "http://localhost:${PORT_}/health"
+
+                        # 2. E2E suite inside the compose network ("db" resolves)
+                        $DC run --rm --build e2e
+                    '''
+                }
+                post {
+                    always {
+                        sh '$DC down -v --remove-orphans || true'
                     }
-                    trap on_exit EXIT
-
-                    # Tag the compose-built image with its final name (build once)
-                    export BACKEND_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
-
-                    # 1. Smoke test: image boots and passes its own healthcheck
-                    $DC up --build -d --wait --wait-timeout 120 backend
-                    PORT_=$($DC port backend 9090 | head -n1 | awk -F: '{print $NF}')
-                    curl -fsS "http://localhost:${PORT_}/health"
-
-                    # 2. E2E suite inside the compose network ("db" resolves)
-                    $DC run --rm --build e2e
-                '''
-            }
-            post {
-                always {
-                    sh '$DC down -v --remove-orphans || true'
                 }
             }
         }
-        }
-
-
 
         stage('Build Application') {
             steps {
