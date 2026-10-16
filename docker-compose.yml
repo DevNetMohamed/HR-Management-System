@@ -19,7 +19,7 @@ services:
     build:
       context: ./backend
       target: build
-    command: node ./node_modules/typeorm/cli.js migration:run -d dist/infrastructure/database/migrations/data-source.js
+    command: node ./node_modules/typeorm/cli.js migration:run -d dist/infrastructure/database/data-source.js
     environment:
       DB_HOST: db
       DB_PORT: "5432"

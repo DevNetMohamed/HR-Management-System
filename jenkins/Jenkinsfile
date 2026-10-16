@@ -155,7 +155,7 @@ pipeline {
             // Publish only from main; feature branches build, test and scan only.
             // Remove this block if the job is not a multibranch pipeline.
             when {
-                branch 'main'
+                branch 'ci-jenkins'
             }
             steps {
                 withCredentials([
