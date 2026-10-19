@@ -21,7 +21,7 @@ pipeline {
         IMAGE_NAME = 'mohamedadel204/hrms'
         TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
         COMPOSE_PROJECT_NAME = "hrms-ci-${BUILD_NUMBER}"
-        DC = 'docker compose --env-file .env.ci'
+        DC = 'docker compose --env-file .env'
     }
 
     stages {
@@ -44,12 +44,10 @@ pipeline {
                     node --version
                     corepack --version
                     docker --version
-                    # Fails fast if the jenkins user cannot reach the Docker daemon
                     docker info > /dev/null
                     docker compose version
                     trivy --version
-                    # Fails fast if the CI env file is missing from the checkout
-                    test -f .env.ci
+                    test -f .env
                 '''
             }
         }
@@ -150,8 +148,6 @@ pipeline {
         }
 
         stage('Push Image to Docker Hub') {
-            // Publish only from main; feature branches build, test and scan only.
-            // Remove this block if the job is not a multibranch pipeline.
             when {
                 branch 'ci-jenkins'
             }
