@@ -36,7 +36,7 @@ services:
       context: ./backend
     image: ${BACKEND_IMAGE:-hrms-backend:latest}
     restart: unless-stopped
-    env_file: .env
+    env_file: backend/.env
     environment:
       DB_HOST: db
       DB_PORT: "5432"
@@ -55,7 +55,7 @@ services:
       target: build
     profiles: ["test"]
     command: pnpm exec jest --config ./test/jest-e2e.json --runInBand
-    env_file: .env
+    env_file: backend/.env
     environment:
       DB_HOST: db
       DB_PORT: "5432"

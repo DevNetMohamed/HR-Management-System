@@ -21,7 +21,7 @@ pipeline {
         IMAGE_NAME = 'mohamedadel204/hrms'
         TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
         COMPOSE_PROJECT_NAME = "hrms-ci-${BUILD_NUMBER}"
-        DC = 'docker compose --env-file .env'
+        DC = 'docker compose --env-file backend/.env'
     }
 
     stages {
@@ -47,7 +47,7 @@ pipeline {
                     docker info > /dev/null
                     docker compose version
                     trivy --version
-                    test -f .env
+                    test -f backend/.env
                 '''
             }
         }
