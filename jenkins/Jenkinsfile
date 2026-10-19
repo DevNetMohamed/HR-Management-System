@@ -18,6 +18,11 @@ pipeline {
             defaultValue: true,
             description: 'Run migrations, smoke test and E2E suite before building and scanning the image'
         )
+        booleanParam(
+            name: 'PUSH_IMAGE',
+            defaultValue: false,
+            description: 'Force the Docker Hub push regardless of the branch'
+        )
     }
 
     tools {
@@ -39,6 +44,11 @@ pipeline {
             steps {
                 checkout scm
                 script {
+                    def scmVars = checkout scm
+                    def raw = env.BRANCH_NAME ?: scmVars.GIT_BRANCH ?: ''
+                    env.RESOLVED_BRANCH = raw.replaceFirst('^(refs/heads/|refs/remotes/origin/|origin/)', '')
+                    echo "Branch resolved to: '${env.RESOLVED_BRANCH}' (raw: '${raw}')"
+
                     env.IMAGE_TAG = sh(
                         script: 'git rev-parse --short=12 HEAD',
                         returnStdout: true
