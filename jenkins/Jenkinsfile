@@ -194,7 +194,6 @@ pipeline {
             // Works for both a plain Pipeline-from-SCM job (GIT_BRANCH)
             // and a multibranch job (BRANCH_NAME).
             when {
-              
                 expression { return env.RESOLVED_BRANCH == 'ci-jenkins' }
             }
             steps {
@@ -202,12 +201,12 @@ pipeline {
                     usernamePassword(
                         credentialsId: 'dockerhub-credentials',
                         usernameVariable: 'DOCKERHUB_USER',
-                        passwordVariable: 'DOCKERHUB_TOKEN'
+                        passwordVariable: 'DOCKER_TOKEN_JENGINS'
                     )
                 ]) {
                     sh '''
                         set -eu
-                        echo "$DOCKERHUB_TOKEN" | \
+                        echo "$DOCKER_TOKEN_JENGINS" | \
                             docker login \
                                 --username "$DOCKERHUB_USER" \
                                 --password-stdin
