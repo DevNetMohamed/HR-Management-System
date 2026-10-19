@@ -194,10 +194,8 @@ pipeline {
             // Works for both a plain Pipeline-from-SCM job (GIT_BRANCH)
             // and a multibranch job (BRANCH_NAME).
             when {
-                expression {
-                    return env.BRANCH_NAME == 'ci-jenkins' ||
-                           env.GIT_BRANCH == 'origin/ci-jenkins'
-                }
+              
+                expression { return env.RESOLVED_BRANCH == 'ci-jenkins' }
             }
             steps {
                 withCredentials([
