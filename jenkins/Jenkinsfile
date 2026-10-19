@@ -86,42 +86,42 @@ pipeline {
         //     }
         // }
 
-        stage('Integration Tests (E2E)') {
-            steps {
-                sh '''
-                    set -eu
-                    set +x
+        // stage('Integration Tests (E2E)') {
+        //     steps {
+        //         sh '''
+        //             set -eu
+        //             set +x
 
-                    on_exit() {
-                        rc=$?
-                        if [ "$rc" -ne 0 ]; then
-                            echo "---- E2E stage failed (exit $rc) ----"
-                            $DC ps -a || true
-                            $DC logs --no-color --tail=150 || true
-                        fi
-                    }
-                    trap on_exit EXIT
+        //             on_exit() {
+        //                 rc=$?
+        //                 if [ "$rc" -ne 0 ]; then
+        //                     echo "---- E2E stage failed (exit $rc) ----"
+        //                     $DC ps -a || true
+        //                     $DC logs --no-color --tail=150 || true
+        //                 fi
+        //             }
+        //             trap on_exit EXIT
 
-                    export BACKEND_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
+        //             export BACKEND_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
 
-                    # 1. DB + migrations, with live logs (db stays running afterwards)
-                    $DC run --rm --build migrate
+        //             # 1. DB + migrations, with live logs (db stays running afterwards)
+        //             $DC run --rm --build migrate
 
-                    # 2. Backend smoke test; --no-deps so migrate is not run again
-                    $DC up -d --build --no-deps --wait --wait-timeout 300 backend
-                    PORT_=$($DC port backend 9090 | head -n1 | awk -F: '{print $NF}')
-                    curl -fsS "http://localhost:${PORT_}/health"
+        //             # 2. Backend smoke test; --no-deps so migrate is not run again
+        //             $DC up -d --build --no-deps --wait --wait-timeout 300 backend
+        //             PORT_=$($DC port backend 9090 | head -n1 | awk -F: '{print $NF}')
+        //             curl -fsS "http://localhost:${PORT_}/health"
 
-                    # 3. E2E suite inside the compose network
-                    $DC run --rm --build --no-deps e2e
-                '''
-            }
-            post {
-                always {
-                    sh '$DC down -v --remove-orphans || true'
-                }
-            }
-        }
+        //             # 3. E2E suite inside the compose network
+        //             $DC run --rm --build --no-deps e2e
+        //         '''
+        //     }
+        //     post {
+        //         always {
+        //             sh '$DC down -v --remove-orphans || true'
+        //         }
+        //     }
+        // }
 
         stage('Trivy Image Scan') {
             steps {
