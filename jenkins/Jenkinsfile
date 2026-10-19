@@ -201,12 +201,12 @@ pipeline {
                     usernamePassword(
                         credentialsId: 'dockerhub-credentials',
                         usernameVariable: 'DOCKERHUB_USER',
-                        passwordVariable: 'DOCKER_TOKEN_JENGINS'
+                        passwordVariable: 'DOCKER_TOKEN_JENKINS'
                     )
                 ]) {
                     sh '''
                         set -eu
-                        echo "$DOCKER_TOKEN_JENGINS" | \
+                        echo "$DOCKER_TOKEN_JENKINS" | \
                             docker login \
                                 --username "$DOCKERHUB_USER" \
                                 --password-stdin
