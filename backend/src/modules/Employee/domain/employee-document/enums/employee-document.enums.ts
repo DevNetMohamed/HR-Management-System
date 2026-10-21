@@ -11,9 +11,6 @@ export const isEmployeeDocumentType = (v: unknown): v is EmployeeDocumentType =>
   typeof v === 'string' &&
   (Object.values(EmployeeDocumentType) as string[]).includes(v);
 
-
-
-  
 export const DOCUMENT_TYPE_RULES: Record<
   EmployeeDocumentType,
   { requiresExpiry: boolean; onePerEmployee: boolean }

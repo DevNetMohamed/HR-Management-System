@@ -2,8 +2,8 @@ import {
   EmergencyContact,
   EmergencycontactProps,
 } from 'src/modules/Employee/domain/emergency-contact/entities/emergency-contact.entity';
-import { Relationship } from 'src/modules/Employee/domain/emergency-contact/enums/emergency-contact.enums';
 import { EmergencyContactOrmEntity } from './emergency-contacts.orm-entity';
+import { DependentRelationship } from 'src/modules/Employee/domain/employee-dependents/enums/employee-dependent.enums';
 
 export class EmergencyContactMapper {
   static toDomain(orm: EmergencyContactOrmEntity): EmergencyContact {
@@ -12,7 +12,7 @@ export class EmergencyContactMapper {
       companyId: orm.companyId,
       employeeId: orm.employeeId,
       name: orm.name,
-      relationship: orm.relationship as Relationship,
+      relationship: orm.relationship as DependentRelationship,
       phone: orm.phone,
     });
   }

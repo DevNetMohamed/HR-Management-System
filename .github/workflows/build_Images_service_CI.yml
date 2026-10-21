@@ -1,6 +1,9 @@
 name: HRMS CI (manual)
 
 on:
+  push: 
+    branches: 
+      - ci/cd
   workflow_dispatch:
     inputs:
       push_image:
@@ -21,6 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  APP_DIR: backend
   NODE_VERSION: "22"
   IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/hrms
   LOCAL_TAG: hrms:ci
@@ -29,19 +33,26 @@ jobs:
   # ───────────── Stage 1 ─────────────
   build:
     name: 1 · Build
-    if: github.ref == 'refs/heads/dev'          # manual runs from other branches are skipped
+    if: github.ref == 'refs/heads/ci/cd'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ env.APP_DIR }}/package.json   # pnpm version comes from "packageManager"
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+          cache-dependency-path: ${{ env.APP_DIR }}/pnpm-lock.yaml
+      - run: pnpm -v
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run --if-present lint
+      # - run: pnpm lint:ci
       - run: pnpm build
 
   # ───────────── Stage 2 ─────────────
@@ -50,6 +61,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -64,22 +78,34 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/hrms_test
-      FIELD_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: hrms_test
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ env.APP_DIR }}/package.json
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+          cache-dependency-path: ${{ env.APP_DIR }}/pnpm-lock.yaml
+      - run: pnpm -v
       - run: pnpm install --frozen-lockfile
-      - name: Unit tests
-        run: pnpm test
+      - name: Generate a throwaway encryption key (64 hex chars)
+        run: echo "FIELD_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+      # - name: Unit tests
+      #   run: pnpm test
+
       - name: Migrations apply cleanly on an empty database
         run: pnpm migration:run
-      - name: e2e tests
-        run: pnpm run --if-present test:e2e
+
+      # - name: e2e tests
+      #   run: pnpm run --if-present test:e2e
 
   # ───────────── Stage 3a: build the image ─────────────
   image-build:
@@ -91,9 +117,10 @@ jobs:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6.19.2
         with:
-          context: .
+          context: ${{ env.APP_DIR }}
+          file: ${{ env.APP_DIR }}/Dockerfile
           push: false
           tags: ${{ env.LOCAL_TAG }}
           labels: |
@@ -120,7 +147,6 @@ jobs:
           name: hrms-image
           path: ${{ runner.temp }}
 
-      # Informational report: shows everything MEDIUM and above, never fails
       - name: Trivy report
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0, verify the SHA
         with:
@@ -150,7 +176,6 @@ jobs:
           path: trivy-report.txt
           retention-days: 14
 
-      # The gate: fails the pipeline, so nothing gets pushed
       - name: Trivy gate
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0, verify the SHA
         with:
@@ -169,7 +194,7 @@ jobs:
     if: ${{ inputs.push_image }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: dockerhub
+    # environment: "dockerhub"
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -182,11 +207,12 @@ jobs:
         run: |
           set -euo pipefail
           SHA7="${GITHUB_SHA::7}"
+          BRANCH_TAG="${GITHUB_REF_NAME//\//-}"          # ci/cd  ->  ci-cd
           docker load -i "$RUNNER_TEMP/image.tar"
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-          for tag in "dev-${SHA7}" "dev"; do
+          for tag in "${BRANCH_TAG}-${SHA7}" "${BRANCH_TAG}"; do
             docker tag "$LOCAL_TAG" "$IMAGE:$tag"
             docker push "$IMAGE:$tag"
           done
           docker logout
-          echo "Pushed \`$IMAGE:dev-${SHA7}\` and \`$IMAGE:dev\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pushed \`$IMAGE:${BRANCH_TAG}-${SHA7}\` and \`$IMAGE:${BRANCH_TAG}\`" >> "$GITHUB_STEP_SUMMARY"

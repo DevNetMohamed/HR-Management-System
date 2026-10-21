@@ -1,10 +1,20 @@
-import { Check, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
-import { EmployeeOrmEntity } from "../employee/employee.orm-entity";
+import {
+  Check,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+} from 'typeorm';
+import { EmployeeOrmEntity } from '../employee/employee.orm-entity';
 
 @Entity('job_history')
 @Index('job_history_employee_idx', ['employeeId', 'effectiveDate'])
-@Check('job_history_change_type_chk',
-       `"change_type" IN ('hire', 'promotion', 'transfer', 'demotion')`)
+@Check(
+  'job_history_change_type_chk',
+  `"change_type" IN ('hire', 'promotion', 'transfer', 'demotion')`,
+)
 export class JobHistoryOrmEntity {
   @PrimaryColumn('uuid') id: string;
   @Column('uuid') companyId: string;

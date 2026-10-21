@@ -1,7 +1,6 @@
-import { DomainEvent } from "src/common/domain-event/DomainEvent.base";
+import { DomainEvent } from 'src/common/domain-event/DomainEvent.base';
 
-export class ContractActivated extends DomainEvent
-{
+export class ContractActivated extends DomainEvent {
   readonly name = 'contract.activated';
   constructor(
     readonly companyId: string,
@@ -13,8 +12,7 @@ export class ContractActivated extends DomainEvent
     super();
   }
 }
-export class ContractTerminated extends DomainEvent
-{
+export class ContractTerminated extends DomainEvent {
   readonly name = 'contract.terminated';
   constructor(
     readonly companyId: string,
@@ -25,8 +23,7 @@ export class ContractTerminated extends DomainEvent
     super();
   }
 }
-export class ContractExpired extends DomainEvent
-{
+export class ContractExpired extends DomainEvent {
   readonly name = 'contract.expired';
   constructor(
     readonly companyId: string,

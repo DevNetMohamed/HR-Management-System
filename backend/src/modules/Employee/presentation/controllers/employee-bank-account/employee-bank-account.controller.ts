@@ -1,5 +1,5 @@
 import {
-    Body,
+  Body,
   Controller,
   Delete,
   Get,
@@ -66,7 +66,7 @@ export class EmployeeBankAccountController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBankAccountRequest,
   ) {
-    return this.useCases.update({companyId, employeeId,id, ...dto});
+    return this.useCases.update({ companyId, employeeId, id, ...dto });
   }
 
   @Put(':id/primary')

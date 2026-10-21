@@ -19,5 +19,3 @@ export enum JobChangeType {
   TRANSFER = 'transfer',
   DEMOTION = 'demotion',
 }
-
-

@@ -1,7 +1,15 @@
-import { randomUUID } from "crypto";
-import { IsoDate } from "../../value-objects/iso-date";
-import { isEmployeeDocumentType } from "../enums/employee-document.enums";
-import { CreateDocumentInput, Dates, DocumentFile, EmployeeDocumentProps, fail, normalizeFile, validateDates } from "./employee-document.entity";
+import { randomUUID } from 'crypto';
+import { IsoDate } from '../../value-objects/iso-date';
+import { isEmployeeDocumentType } from '../enums/employee-document.enums';
+import {
+  CreateDocumentInput,
+  Dates,
+  DocumentFile,
+  EmployeeDocumentProps,
+  fail,
+  normalizeFile,
+  validateDates,
+} from './employee-document.entity';
 
 export class EmployeeDocument {
   private constructor(private props: EmployeeDocumentProps) {}

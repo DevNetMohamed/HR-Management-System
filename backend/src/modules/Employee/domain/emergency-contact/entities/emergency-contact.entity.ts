@@ -1,5 +1,5 @@
 import { DomainError } from 'src/common/domain-error/DomainError.base';
-import { isRelationship, Relationship } from '../enums/emergency-contact.enums';
+import { isRelationship } from '../enums/emergency-contact.enums';
 import { Phone } from '../../value-objects/phone.vo';
 import { randomUUID } from 'crypto';
 

@@ -1,10 +1,9 @@
-
 import { EmployeeDependent } from '../entities/employee-dependents.entity';
 
 export interface EmployeeDependentRepository {
   findById(companyId: string, id: string): Promise<EmployeeDependent | null>;
   save(dependent: EmployeeDependent): Promise<void>;
-  remove(companyId: string, id: string): Promise<void>; 
+  remove(companyId: string, id: string): Promise<void>;
   countByEmployee(companyId: string, employeeId: string): Promise<number>;
   hasSpouse(
     companyId: string,

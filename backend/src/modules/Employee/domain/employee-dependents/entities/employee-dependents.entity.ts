@@ -11,7 +11,7 @@ export interface EmployeeDependentProps {
   company_id: string;
   employee_id: string;
   name: string;
-  relationship: string;
+  relationship: DependentRelationship;
   dateOfBirth: IsoDate | null;
   coveredByInsurance: boolean;
 }
@@ -93,7 +93,7 @@ export class EmployeeDependent {
     const defiend = Object.fromEntries(
       Object.entries(patch).filter(([, value]) => value !== undefined),
     );
-    const next = normalize({ ...this.props, ...defiend } as Editable, today);
+    const next = normalize({ ...this.props, ...defiend }, today);
     Object.assign(this.props, next);
   }
 

@@ -1,7 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Employee, HireInput } from '../../../domain/Employees/entities/employee.entity';
-import { EMPLOYEE_REPOSITORY, type EmployeeRepository } from '../../../domain/Employees/repositories/employee.repository';
-import { EVENT_PUBLISHER, type DomainEventPublisher } from '../../ports/event-publisher.port';
+import {
+  Employee,
+  HireInput,
+} from '../../../domain/Employees/entities/employee.entity';
+import {
+  EMPLOYEE_REPOSITORY,
+  type EmployeeRepository,
+} from '../../../domain/Employees/repositories/employee.repository';
+import {
+  EVENT_PUBLISHER,
+  type DomainEventPublisher,
+} from '../../ports/event-publisher.port';
 import { ReferenceValidator } from '../../services/reference-validator';
 import { ConflictError } from '../../errors';
 
@@ -29,6 +38,9 @@ export class HireEmployeeUseCase {
     await this.employees.save(employee);
     await this.publisher.publish(employee.pullEvents());
 
-    return { id: employee.id, employeeNumber: employee.toSnapshot().employeeNumber };
+    return {
+      id: employee.id,
+      employeeNumber: employee.toSnapshot().employeeNumber,
+    };
   }
 }

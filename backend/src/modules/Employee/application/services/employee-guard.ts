@@ -12,7 +12,7 @@ export class EmployeeGuard {
     @Inject(EMPLOYEE_REPOSITORY) private readonly employees: EmployeeRepository,
   ) {}
 
-    private async load(companyId: string, employeeId: string) {
+  private async load(companyId: string, employeeId: string) {
     const employee = await this.employees.findById(companyId, employeeId);
     if (!employee) throw new NotFoundError('Employee not found');
     return employee;
@@ -22,10 +22,10 @@ export class EmployeeGuard {
     await this.load(companyId, employeeId);
   }
 
-
   async assertEditable(companyId: string, employeeId: string): Promise<void> {
     const e = await this.load(companyId, employeeId);
-    if (e.status === EmployeeStatus.TERMINATED) throw new ValidationError('Employee is terminated');
+    if (e.status === EmployeeStatus.TERMINATED)
+      throw new ValidationError('Employee is terminated');
   }
 
   async assertCanHaveContract(

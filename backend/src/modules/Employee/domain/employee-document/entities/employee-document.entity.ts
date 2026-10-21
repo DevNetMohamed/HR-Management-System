@@ -30,7 +30,8 @@ export interface EmployeeDocumentProps extends DocumentFile {
 }
 
 export type Dates = { issueDate: IsoDate | null; expiryDate: IsoDate | null };
-export const fail = (message: string, code: string) => new DomainError(message, code);
+export const fail = (message: string, code: string) =>
+  new DomainError(message, code);
 
 export function validateDates(
   type: EmployeeDocumentType,
@@ -88,4 +89,3 @@ export interface CreateDocumentInput {
   issueDate?: IsoDate | null;
   expiryDate?: IsoDate | null;
 }
-

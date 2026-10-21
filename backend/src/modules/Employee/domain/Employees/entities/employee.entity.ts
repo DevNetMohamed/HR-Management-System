@@ -1,11 +1,13 @@
 import { randomUUID } from 'crypto';
-import {
-  InvalidStatusTransitionError,
-} from '../../errors/domain.errors';
+import { InvalidStatusTransitionError } from '../../errors/domain.errors';
 import { Email } from '../../value-objects/email.vo';
-import { EmployeeStatus as S, EmploymentType, JobChangeType } from '../enums/Employee-enums';
+import {
+  EmployeeStatus as S,
+  EmploymentType,
+  JobChangeType,
+} from '../enums/Employee-enums';
 import { JobHistoryEntry } from '../../job-history/job-history-entry';
-import {  EmployeeTerminated } from '../events/employee-terminated.events';
+import { EmployeeTerminated } from '../events/employee-terminated.events';
 import { EmployeeHired } from '../events/employee-hired.event';
 import { EmployeeAssignmentChanged } from '../events/employee-assignment-changed.event';
 import { DomainError } from 'src/common/domain-error/DomainError.base';
@@ -238,9 +240,14 @@ export class Employee {
     if (p.lastName !== undefined && !p.lastName.trim())
       throw new DomainError('Last name is required', 'EMPLOYEE_NAME_REQUIRED');
     if (p.dateOfBirth) assertDate(p.dateOfBirth, 'dateOfBirth');
-    Object.entries(p).forEach(([k, v]) => {
-      if (v !== undefined) (this.props as any)[k] = v;
-    });
+    if (p.phone !== undefined) this.props.phone = p.phone;
+    if (p.gender !== undefined) this.props.gender = p.gender;
+    if (p.nationality !== undefined) this.props.nationality = p.nationality;
+    if (p.nationalId !== undefined) this.props.nationalId = p.nationalId;
+    if (p.maritalStatus !== undefined)
+      this.props.maritalStatus = p.maritalStatus;
+    if (p.profilePhotoUrl !== undefined)
+      this.props.profilePhotoUrl = p.profilePhotoUrl;
   }
 
   // ---------- Read access ----------

@@ -62,7 +62,6 @@ import { TypeOrmEmployeeDocumentQueries } from './infrastructure/persistence/emp
 import { DOCUMENT_STORAGE } from './application/ports/document-storage.port';
 import { S3DocumentStorage } from 'src/infrastructure/storage/s3-document-storage';
 
-
 @Module({
   imports: [
     DatabaseModule,

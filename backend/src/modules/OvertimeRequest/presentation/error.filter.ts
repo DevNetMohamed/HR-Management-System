@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { DomainError } from '../domain/errors/domain.errors';
 import { ApplicationError } from '../application/errors';
+import type { Response } from 'express';
 
 const STATUS_BY_CODE: Record<string, number> = {
   INVALID_OVERTIME_MINUTES: HttpStatus.BAD_REQUEST,
@@ -30,7 +31,8 @@ export class OvertimeRequestErrorFilter implements ExceptionFilter {
     const status =
       STATUS_BY_CODE[error.code] ?? HttpStatus.UNPROCESSABLE_ENTITY;
 
-    host.switchToHttp().getResponse().status(status).json({
+    const res = host.switchToHttp().getResponse<Response>()
+    res.status(status).json({
       statusCode: status,
       code: error.code,
       message: error.message,

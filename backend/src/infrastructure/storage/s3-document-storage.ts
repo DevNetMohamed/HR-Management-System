@@ -9,6 +9,21 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DocumentStoragePort } from '../../modules/Employee/application/ports/document-storage.port';
 
+function isS3NotFound(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const candidate = error as {
+    name?: unknown;
+    $metadata?: { httpStatusCode?: unknown };
+  };
+
+  return (
+    candidate.name === 'NotFound' || candidate.$metadata?.httpStatusCode === 404
+  );
+}
+
 @Injectable()
 export class S3DocumentStorage implements DocumentStoragePort {
   private readonly s3 = new S3Client({ region: process.env.AWS_REGION });
@@ -50,10 +65,12 @@ export class S3DocumentStorage implements DocumentStoragePort {
         sizeBytes: r.ContentLength ?? 0,
         contentType: r.ContentType ?? null,
       };
-    } catch (e: any) {
-      if (e?.name === 'NotFound' || e?.$metadata?.httpStatusCode === 404)
+    } catch (error: unknown) {
+      if (isS3NotFound(error)) {
         return null;
-      throw e;
+      }
+
+      throw error;
     }
   }
 

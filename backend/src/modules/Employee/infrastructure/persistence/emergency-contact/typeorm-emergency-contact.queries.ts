@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import { EmergencyContactQueries } from "src/modules/Employee/application/queries/emergency-contact.queries";
-import { DataSource } from "typeorm";
+import { Injectable } from '@nestjs/common';
+import { EmergencyContactQueries } from 'src/modules/Employee/application/queries/emergency-contact.queries';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class TypeOrmEmergencyContactQueries implements EmergencyContactQueries {

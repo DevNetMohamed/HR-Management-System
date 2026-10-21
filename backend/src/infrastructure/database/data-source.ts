@@ -11,11 +11,14 @@ export default new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 
-  entities: ['src/**/*.orm-entity.ts'],
-  migrations: ['src/infrastructure/database/migrations/*.ts'],
+  // entities: ['src/**/*.orm-entity.ts'],
+  // migrations: ['src/infrastructure/database/migrations/*.ts'],
+
+  entities: [__dirname + '/../../**/*.orm-entity{.ts,.js}'],
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
 
   namingStrategy: new SnakeNamingStrategy(),
 
   synchronize: false,
-  logging: true
+  logging: true,
 });

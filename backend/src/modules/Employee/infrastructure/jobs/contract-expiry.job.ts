@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { ExpireDueContractsUseCase } from "../../application/use-cases/employment-contract/expire-due-contracts.use-case";
-import { todayIn } from "../../domain/value-objects/iso-date";
-import { Cron } from "@nestjs/schedule";
+import { Injectable } from '@nestjs/common';
+import { ExpireDueContractsUseCase } from '../../application/use-cases/employment-contract/expire-due-contracts.use-case';
+import { todayIn } from '../../domain/value-objects/iso-date';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ContractExpiryJob {

@@ -7,8 +7,6 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Relationship } from 'src/modules/Employee/domain/emergency-contact/enums/emergency-contact.enums';
-import { Phone } from 'src/modules/Employee/domain/value-objects/phone.vo';
-
 
 const PHONE = /^\+?[\d\s\-()]{7,25}$/;
 

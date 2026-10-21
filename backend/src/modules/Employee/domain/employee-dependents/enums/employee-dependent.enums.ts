@@ -4,5 +4,8 @@ export enum DependentRelationship {
   PARENT = 'parent',
 }
 
-export const isDependentRelationship = (v: unknown): v is DependentRelationship =>
-  typeof v === 'string' && (Object.values(DependentRelationship) as string[]).includes(v);
+export const isDependentRelationship = (
+  v: unknown,
+): v is DependentRelationship =>
+  typeof v === 'string' &&
+  (Object.values(DependentRelationship) as string[]).includes(v);

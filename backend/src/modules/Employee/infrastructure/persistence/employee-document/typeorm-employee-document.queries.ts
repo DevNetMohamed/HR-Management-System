@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
+  EmployeeDocumentItem,
   EmployeeDocumentQueries,
+  ExpiringDocumentItem,
   ExpiryStatus,
 } from 'src/modules/Employee/application/queries/employee-document.queries';
 import { DataSource } from 'typeorm';
@@ -15,12 +17,16 @@ const statusOf = (daysLeft: number | null): ExpiryStatus =>
         ? 'expiring'
         : 'valid';
 
+
+type DocRow = Omit<EmployeeDocumentItem, 'expiryStatus'>;
+type ExpiringRow = Omit<ExpiringDocumentItem, 'expiryStatus'>
 @Injectable()
 export class TypeOrmEmployeeDocumentQueries implements EmployeeDocumentQueries {
-  constructor(private readonly ds: DataSource) {}
+  constructor(private readonly ds: DataSource) { }
+
 
   async listByEmployee(companyId: string, employeeId: string, today: string) {
-    const rows = await this.ds.query(
+    const rows = await this.ds.query<DocRow[]>(
       `SELECT id, document_type AS "documentType", file_name AS "fileName", mime_type AS "mimeType",
               size_bytes AS "sizeBytes", issue_date::text AS "issueDate", expiry_date::text AS "expiryDate",
               (expiry_date - $3::date) AS "daysLeft",
@@ -34,7 +40,7 @@ export class TypeOrmEmployeeDocumentQueries implements EmployeeDocumentQueries {
   }
 
   async expiringWithin(companyId: string, days: number, today: string) {
-    const rows = await this.ds.query(
+    const rows = await this.ds.query<ExpiringRow[]>(
       `SELECT d.id AS "documentId", d.employee_id AS "employeeId", e.employee_number AS "employeeNumber",
               d.document_type AS "documentType", d.expiry_date::text AS "expiryDate",
               (d.expiry_date - $2::date) AS "daysLeft"
