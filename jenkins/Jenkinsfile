@@ -64,7 +64,6 @@ pipeline {
                         set -eu
                         cp "$ENV_FILE" backend/.env
                         chmod 600 backend/.env
-                        # Strip CRLF if the file was created on Windows
                         sed -i 's/\\r$//' backend/.env
                     '''
                 }
