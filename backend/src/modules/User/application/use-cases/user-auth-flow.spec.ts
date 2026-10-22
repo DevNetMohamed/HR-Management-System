@@ -141,7 +141,7 @@ describe('User account lifecycle', () => {
     const recoveryUpdate = { update: jest.fn().mockReturnThis(), set: jest.fn().mockReturnThis(), where: jest.fn().mockReturnThis(), execute: jest.fn().mockResolvedValue({ affected: 1 }) };
     const accountUpdate = { update: jest.fn().mockReturnThis(), set: jest.fn().mockReturnThis(), where: jest.fn().mockReturnThis(), execute: jest.fn().mockResolvedValue({ affected: 1 }) };
     const sessionUpdate = { update: jest.fn().mockReturnThis(), set: jest.fn().mockReturnThis(), where: jest.fn().mockReturnThis(), execute: jest.fn().mockResolvedValue({ affected: 2 }) };
-    const builders = new Map([[EmployeePasswordRecoveryOrmEntity, recoveryUpdate], [EmployeeAccountOrmEntity, accountUpdate], [AccessSessionOrmEntity, sessionUpdate]]);
+    const builders = new Map<any, any>([[EmployeePasswordRecoveryOrmEntity, recoveryUpdate], [EmployeeAccountOrmEntity, accountUpdate], [AccessSessionOrmEntity, sessionUpdate]]);
     const recoveries = {
       findOne: jest.fn().mockResolvedValue(recovery),
       manager: { transaction: jest.fn(async (work) => work({ getRepository: (entity) => ({ createQueryBuilder: () => builders.get(entity) }) })) },
