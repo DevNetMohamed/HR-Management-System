@@ -13,6 +13,7 @@ import {
 } from '../../ports/event-publisher.port';
 import { ReferenceValidator } from '../../services/reference-validator';
 import { ConflictError } from '../../errors';
+import { EmployeeInvitationService } from '../../services/employee-invitation.service';
 
 export type HireEmployeeCommand = Omit<HireInput, 'employeeNumber'>;
 
@@ -22,6 +23,7 @@ export class HireEmployeeUseCase {
     @Inject(EMPLOYEE_REPOSITORY) private readonly employees: EmployeeRepository,
     @Inject(EVENT_PUBLISHER) private readonly publisher: DomainEventPublisher,
     private readonly refs: ReferenceValidator,
+    private readonly invitations: EmployeeInvitationService,
   ) {}
 
   async execute(cmd: HireEmployeeCommand) {
@@ -35,12 +37,20 @@ export class HireEmployeeUseCase {
       employeeNumber: await this.employees.nextEmployeeNumber(cmd.companyId),
     });
 
-    await this.employees.save(employee);
+    const snapshot = employee.toSnapshot();
+    const userAccount = this.invitations.prepare(
+      employee.companyId,
+      employee.id,
+      snapshot.email,
+      snapshot.companyEmail ?? undefined,
+    );
+    await this.employees.saveWithAccount(employee, userAccount);
     await this.publisher.publish(employee.pullEvents());
 
     return {
       id: employee.id,
       employeeNumber: employee.toSnapshot().employeeNumber,
+      userAccount: { id: userAccount.id, employeeId: userAccount.employeeId, accountStatus: userAccount.accountStatus },
     };
   }
 }

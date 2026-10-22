@@ -7,6 +7,8 @@ import { Employee } from '../../../domain/Employees/entities/employee.entity';
 import { JobHistoryOrmEntity } from '../job-history/job-history.orm-entity';
 import { Repository } from 'typeorm';
 import { DataSource } from 'typeorm';
+import { EmployeeAccountOrmEntity } from '../../../../User/infrastructure/persistence/user-account.orm-entity';
+import { EmployeeAccountProvisioningRecord } from '../../../domain/Employees/repositories/employee.repository';
 
 @Injectable()
 export class TypeOrmEmployeeRepository implements EmployeeRepository {
@@ -31,6 +33,21 @@ export class TypeOrmEmployeeRepository implements EmployeeRepository {
           .getRepository(JobHistoryOrmEntity)
           .insert(e.pendingJobHistory.map((h) => ({ ...h })));
       }
+    });
+    e.markPersisted();
+  }
+
+  async saveWithAccount(e: Employee, account: EmployeeAccountProvisioningRecord) {
+    await this.ds.transaction(async (m) => {
+      await m
+        .getRepository(EmployeeOrmEntity)
+        .save(EmployeeMapper.toOrm(e.toSnapshot()));
+      if (e.pendingJobHistory.length) {
+        await m
+          .getRepository(JobHistoryOrmEntity)
+          .insert(e.pendingJobHistory.map((h) => ({ ...h })));
+      }
+      await m.getRepository(EmployeeAccountOrmEntity).insert(account);
     });
     e.markPersisted();
   }

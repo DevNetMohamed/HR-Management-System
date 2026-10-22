@@ -24,6 +24,7 @@ export class HireEmployeeRequest {
   @IsString() @IsNotEmpty() firstName: string;
   @IsString() @IsNotEmpty() lastName: string;
   @IsEmail() email: string;
+  @IsOptional() @IsEmail() companyEmail?: string;
   @IsOptional() @IsString() phone?: string;
   @Matches(DATE) hireDate: string;
   @IsOptional() @IsEnum(EmploymentType) employmentType?: EmploymentType;

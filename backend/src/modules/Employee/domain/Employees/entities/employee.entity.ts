@@ -27,6 +27,7 @@ export interface EmployeeProps {
   firstName: string;
   lastName: string;
   email: string;
+  companyEmail: string | null;
   phone: string | null;
   dateOfBirth: IsoDate | null;
   gender: string | null;
@@ -97,6 +98,7 @@ export class Employee {
       firstName: i.firstName.trim(),
       lastName: i.lastName.trim(),
       email: Email.create(i.email).value,
+      companyEmail: i.companyEmail ? Email.create(i.companyEmail).value : null,
       phone: i.phone ?? null,
       dateOfBirth: i.dateOfBirth ?? null,
       gender: i.gender ?? null,

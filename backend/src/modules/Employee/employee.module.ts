@@ -61,10 +61,13 @@ import { TypeOrmEmployeeDocumentRepository } from './infrastructure/persistence/
 import { TypeOrmEmployeeDocumentQueries } from './infrastructure/persistence/employee-document/typeorm-employee-document.queries';
 import { DOCUMENT_STORAGE } from './application/ports/document-storage.port';
 import { S3DocumentStorage } from 'src/infrastructure/storage/s3-document-storage';
+import { UserModule } from '../User/user.module';
+import { EmployeeAccountOrmEntity } from '../User/infrastructure/persistence/user-account.orm-entity';
 
 @Module({
   imports: [
     DatabaseModule,
+    UserModule,
     TypeOrmModule.forFeature([
       EmployeeOrmEntity,
       JobHistoryOrmEntity,
@@ -73,6 +76,7 @@ import { S3DocumentStorage } from 'src/infrastructure/storage/s3-document-storag
       EmployeeDependentOrmEntity,
       EmployeeBankAccountOrmEntity,
       EmployeeDocumentOrmEntity,
+      EmployeeAccountOrmEntity,
     ]),
   ],
   controllers: [

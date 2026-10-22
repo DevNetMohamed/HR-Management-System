@@ -35,6 +35,8 @@ export class EmployeeOrmEntity extends AuditedOrmEntity {
   @Column() firstName: string;
   @Column() lastName: string;
   @Column() email: string;
+  // The company mailbox belongs to the login account and is stored in employee_accounts.
+  companyEmail: string | null;
   @Column({ type: 'varchar', nullable: true }) phone: string | null;
   @Column({ type: 'date', nullable: true }) dateOfBirth: string | null;
   @Column({ type: 'varchar', nullable: true }) gender: string | null;

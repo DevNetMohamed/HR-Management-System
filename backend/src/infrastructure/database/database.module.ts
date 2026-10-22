@@ -17,7 +17,10 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
         autoLoadEntities: true,
         synchronize: false,
         namingStrategy: new SnakeNamingStrategy(),
-        logging: true,
+        ssl: process.env.DB_SSL_MODE && process.env.DB_SSL_MODE !== 'disable'
+          ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' }
+          : undefined,
+        logging: process.env.DB_LOGGING !== 'false',
       }),
     }),
   ],
