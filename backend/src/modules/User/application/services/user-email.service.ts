@@ -18,6 +18,10 @@ export class UserEmailService {
     return this.send(to, 'Your HRMS password was changed', this.render('Password changed', 'Your HRMS password was changed. If you did not make this change, contact your HR administrator.', undefined, undefined));
   }
 
+  async sendNotificationTest(to: string, subject: string, message: string) {
+    return this.send(to, subject, this.render(subject, message));
+  }
+
   async sendHrmsActivated(personalEmail: string, companyEmail: string) {
     const html = this.render('HRMS account activated', 'Your HRMS account is active. Sign in using your company email and the HRMS password you created.', undefined, undefined);
     await Promise.all([

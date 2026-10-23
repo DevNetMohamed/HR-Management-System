@@ -40,6 +40,6 @@ import { ChangeHrmsPasswordUseCase } from './application/use-cases/change-hrms-p
     UserEmailService,
     ChangeHrmsPasswordUseCase,
   ],
-  exports: [EmployeeInvitationService],
+  exports: [EmployeeInvitationService, UserEmailService],
 })
 export class UserModule {}
