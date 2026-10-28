@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  tag: "5c20b027361c"   # Jenkins updates this one for dev
+
+ingress:
+  hosts:
+    - host: hrms.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+autoscaling:
+  enabled: false
+
+config:
+  NODE_ENV: development
+  PORT: "3000"

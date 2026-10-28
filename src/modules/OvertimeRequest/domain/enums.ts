@@ -1,7 +1,0 @@
-export enum OvertimeRequestStatus {
-  PENDING_MANAGER = 'PENDING_MANAGER',
-  PENDING_HR = 'PENDING_HR',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
-}

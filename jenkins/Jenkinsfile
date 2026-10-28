@@ -1,0 +1,258 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(
+            numToKeepStr: '20',
+            artifactNumToKeepStr: '10'
+        ))
+    }
+
+    parameters {
+        booleanParam(
+            name: 'RUN_E2E',
+            defaultValue: true,
+            description: 'Run migrations, smoke test and E2E suite before building and scanning the image'
+        )
+        booleanParam(
+            name: 'PUSH_IMAGE',
+            defaultValue: false,
+            description: 'Force the Docker Hub push regardless of the branch'
+        )
+    }
+
+    tools {
+        nodejs 'NodeJS-22'
+    }
+
+    environment {
+        CI = 'true'
+        IMAGE_NAME = 'mohamedadel204/hrms'
+        TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
+        COMPOSE_PROJECT_NAME = "hrms-ci-${BUILD_NUMBER}"
+        // backend/.env is injected from a Jenkins "Secret file" credential
+        // (see the 'Prepare Env' stage); it is never committed to git.
+        DC = 'docker compose --env-file backend/.env'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    def scmVars = checkout scm
+                    def raw = env.BRANCH_NAME ?: scmVars.GIT_BRANCH ?: ''
+                    env.RESOLVED_BRANCH = raw.replaceFirst('^(refs/heads/|refs/remotes/origin/|origin/)', '')
+                    echo "Branch resolved to: '${env.RESOLVED_BRANCH}' (raw: '${raw}')"
+
+                    env.IMAGE_TAG = sh(
+                        script: 'git rev-parse --short=12 HEAD',
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+
+        stage('Prepare Env') {
+            steps {
+                withCredentials([file(credentialsId: 'hrms-backend-env', variable: 'ENV_FILE')]) {
+                    sh '''
+                        set -eu
+                        cp "$ENV_FILE" backend/.env
+                        chmod 600 backend/.env
+                        sed -i 's/\\r$//' backend/.env
+                    '''
+                }
+            }
+        }
+
+        stage('Validate Environment') {
+            steps {
+                sh '''
+                    set -eu
+                    node --version
+                    corepack --version
+                    docker --version
+                    # Fails fast if the jenkins user cannot reach the Docker daemon
+                    docker info > /dev/null
+                    docker compose version
+                    trivy --version
+                    # Fails fast if the env file was not injected
+                    test -f backend/.env
+                    # The image must never contain the secrets file
+                    if ! grep -qE '^\\.env|^\\*\\*/\\.env|^backend/\\.env' backend/.dockerignore .dockerignore 2>/dev/null; then
+                        echo "ERROR: .env is not listed in .dockerignore - secrets could be baked into the image"
+                        exit 1
+                    fi
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        set -eu
+                        corepack enable
+                        pnpm install --frozen-lockfile
+                    '''
+                }
+            }
+        }
+
+        // stage('Lint') {
+        //     steps {
+        //         dir('backend') {
+        //             sh 'pnpm run lint:ci'
+        //         }
+        //     }
+        // }
+
+        // stage('Unit Tests') {
+        //     steps {
+        //         dir('backend') {
+        //             sh '''
+        //                 set -eu
+        //                 pnpm exec jest \
+        //                     --runInBand \
+        //                     --coverage
+        //             '''
+        //         }
+        //     }
+        // }
+
+        stage('Integration Tests (E2E)') {
+            when {
+                expression { return params.RUN_E2E }
+            }
+            steps {
+                sh '''
+                    set -eu
+                    set +x
+
+                    on_exit() {
+                        rc=$?
+                        if [ "$rc" -ne 0 ]; then
+                            echo "---- E2E stage failed (exit $rc) ----"
+                            $DC ps -a || true
+                            $DC logs --no-color --tail=150 || true
+                        fi
+                    }
+                    trap on_exit EXIT
+
+                    export BACKEND_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
+
+                    # 1. DB + migrations, with live logs (db stays running afterwards)
+                    $DC run --rm --build migrate
+
+                    # 2. Backend smoke test; --no-deps so migrate is not run again
+                    $DC up -d --build --no-deps --wait --wait-timeout 300 backend
+                    PORT_=$($DC port backend 9090 | head -n1 | awk -F: '{print $NF}')
+                    curl -fsS "http://localhost:${PORT_}/health"
+
+                    # 3. E2E suite inside the compose network
+                    $DC run --rm --build --no-deps e2e
+                '''
+            }
+            post {
+                always {
+                    sh '$DC down -v --remove-orphans || true'
+                }
+            }
+        }
+
+        // Always make sure the final runtime image exists and is tagged, even
+        // when E2E is skipped. With E2E enabled this is a fast cached build.
+        stage('Build Image') {
+            steps {
+                sh '''
+                    set -eu
+                    export BACKEND_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
+                    $DC build backend
+                    docker image inspect "${IMAGE_NAME}:${IMAGE_TAG}" > /dev/null
+                '''
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh '''
+                    set -eu
+                    mkdir -p reports
+
+                    trivy image \
+                        --cache-dir "${TRIVY_CACHE_DIR}" \
+                        --scanners vuln \
+                        --severity HIGH,CRITICAL \
+                        --ignore-unfixed \
+                        --exit-code 1 \
+                        --no-progress \
+                        --timeout 15m \
+                        --format json \
+                        --output reports/trivy-image.json \
+                        "${IMAGE_NAME}:${IMAGE_TAG}"
+                '''
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            // Works for both a plain Pipeline-from-SCM job (GIT_BRANCH)
+            // and a multibranch job (BRANCH_NAME).
+            when {
+                expression { return env.RESOLVED_BRANCH == 'ci-jenkins' }
+            }
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKER_TOKEN_JENKINS'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        echo "$DOCKER_TOKEN_JENKINS" | \
+                            docker login \
+                                --username "$DOCKERHUB_USER" \
+                                --password-stdin
+
+                        docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts(
+                artifacts: 'reports/**,backend/coverage/**',
+                allowEmptyArchive: true
+            )
+            echo 'HRMS pipeline finished.'
+        }
+
+        success {
+            echo 'CI passed and image scanned.'
+        }
+
+        failure {
+            echo 'Pipeline failed. Inspect the first failed stage.'
+        }
+
+        cleanup {
+            sh '''
+                docker logout || true
+                # Never leave the secrets file in the workspace
+                rm -f backend/.env
+                # Free disk on the agent: remove the built image and dangling layers
+                docker image rm "${IMAGE_NAME}:${IMAGE_TAG}" || true
+                docker image prune -f || true
+            '''
+        }
+    }
+}
