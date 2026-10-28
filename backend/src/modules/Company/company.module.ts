@@ -13,18 +13,24 @@ import { CompanySettingsService } from './application/company-settings.service';
 import { CompanySettingsController } from './presentation/controllers/company/company-settings.controller';
 import { AccessControlModule } from '../AccessControl/access-control.module';
 import { UserModule } from '../User/user.module';
+import { EmployeeAccountOrmEntity } from '../User/infrastructure/persistence/user-account.orm-entity';
+import { EmployeeOrmEntity } from '../Employee/infrastructure/persistence/employee/employee.orm-entity';
+import { EmployeeAuthGuard } from '../Employee/application/services/employee-auth.guard';
+import { AccessControlGuard } from '../AccessControl/application/access-control.guard';
 
 @Module({
   imports: [
     DatabaseModule,
     AccessControlModule,
     UserModule,
-    TypeOrmModule.forFeature([CompanyOrmEntity, CompanyNotificationRuleOrmEntity, CompanySetupDraftOrmEntity, CompanyConfigurationVersionOrmEntity]),
+    TypeOrmModule.forFeature([CompanyOrmEntity, CompanyNotificationRuleOrmEntity, CompanySetupDraftOrmEntity, CompanyConfigurationVersionOrmEntity, EmployeeAccountOrmEntity, EmployeeOrmEntity]),
   ],
   controllers: [CompanyController, CompanySettingsController],
   providers: [
     CreateCompanyUseCase,
     CompanySettingsService,
+    EmployeeAuthGuard,
+    AccessControlGuard,
     {
       provide: COMPANY_REPOSITORY,
       useClass: TypeOrmCompanyRepository,

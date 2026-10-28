@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CompanySettingsNotificationsAndPublishing1792060000000 implements MigrationInterface {
-  name = 'CompanySettingsNotificationsAndPublishing1792060000';
+  name = 'CompanySettingsNotificationsAndPublishing1792060000000';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`CREATE TABLE company_notification_rules (
