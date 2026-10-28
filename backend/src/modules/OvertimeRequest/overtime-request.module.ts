@@ -22,7 +22,8 @@ import { TypeOrmOvertimeRequestQueries } from './infrastructure/persistence/type
 import { SqlAttendanceGateway } from './infrastructure/sql-attendance.gateway';
 import { SqlEmployeeGateway } from './infrastructure/sql-employee.gateway';
 import { RbacAuthorizationGateway } from './infrastructure/rbac-authorization.gateway';
-import { UnavailableOvertimePolicyGateway } from './infrastructure/unavailable-overtime-policy.gateway';
+import { SqlOvertimePolicyGateway } from './infrastructure/sql-overtime-policy.gateway';
+import { TimeConfigurationModule } from '../TimeConfiguration/time-configuration.module';
 import { NestOvertimeEventPublisher } from './infrastructure/nest-event.publisher';
 import { NestInAppNotificationAdapter } from './infrastructure/nest-in-app-notification.adapter';
 import { OvertimeRequestController } from './presentation/overtime-request.controller';
@@ -31,6 +32,7 @@ import { OvertimeRequestErrorFilter } from './presentation/error.filter';
 @Module({
   imports: [
     DatabaseModule,
+    TimeConfigurationModule,
     TypeOrmModule.forFeature([OvertimeRequestOrmEntity]),
   ],
   controllers: [OvertimeRequestController],
@@ -59,7 +61,7 @@ import { OvertimeRequestErrorFilter } from './presentation/error.filter';
     },
     {
       provide: OVERTIME_POLICY_GATEWAY,
-      useClass: UnavailableOvertimePolicyGateway,
+      useClass: SqlOvertimePolicyGateway,
     },
     {
       provide: AUTHORIZATION_GATEWAY,
