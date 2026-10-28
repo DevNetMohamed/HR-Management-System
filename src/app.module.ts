@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { EmployeeModule } from './modules/Employee/employee.module';
 import { OvertimeRequestModule } from './modules/OvertimeRequest/overtime-request.module';
+import { TimeConfigurationModule } from './modules/TimeConfiguration/time-configuration.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { OvertimeRequestModule } from './modules/OvertimeRequest/overtime-reques
     }),
     DatabaseModule,
     EmployeeModule,
+    TimeConfigurationModule,
     OvertimeRequestModule,
   ],
 })
